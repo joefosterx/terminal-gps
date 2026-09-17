@@ -37,6 +37,15 @@ class GoldenTest {
         Fixtures.assertGolden("town-z14-ansi-" + depth.name().toLowerCase() + ".txt", ansi);
     }
 
+    /** Every preset at zoom 15, with colors, so fill patterns, monochrome and the ASCII cap are all covered. */
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"default", "dark", "mono", "vt220", "high-contrast"})
+    void presets(String name) throws Exception {
+        Viewport vp = new Viewport(Fixtures.TOWN_CENTER, 15, 80, 30);
+        Canvas canvas = Renderer.render(vp, Styles.preset(name).orElseThrow(), BRAILLE, Fixtures.town());
+        Fixtures.assertGolden("town-z15-preset-" + name + ".txt", canvas.toAnsi(BRAILLE));
+    }
+
     @Test
     void renderingIsDeterministic() throws RenderException, IOException {
         assertEquals(town(14.5), town(14.5));

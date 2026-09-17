@@ -64,9 +64,21 @@ public final class HttpTileSource implements TileSource {
         return new HttpTileSource(tiles.get(0).asText(), key, maxZoom, client);
     }
 
+    /** Raw MVT bytes (null when the server has no tile) and the response's max age. */
+    public record RawTile(byte[] bytes, long maxAgeSeconds) {
+        /** No {@code Cache-Control} max-age was given. */
+        public static final long UNKNOWN_AGE = -1;
+    }
+
     @Override
     public Optional<Tile> fetch(TileId id) throws TileException {
-        if (id.z() > maxZoom) return Optional.empty();
+        RawTile raw = fetchRaw(id);
+        return raw.bytes() == null ? Optional.empty() : Optional.of(MvtDecoder.decode(id, raw.bytes()));
+    }
+
+    /** Fetches without decoding, for callers that cache bytes. {@code maxAgeSeconds} is 0 for {@code no-store}. */
+    public RawTile fetchRaw(TileId id) throws TileException {
+        if (id.z() > maxZoom) return new RawTile(null, RawTile.UNKNOWN_AGE);
         URI uri = uri(id);
         HttpResponse<byte[]> response;
         try {
@@ -75,7 +87,8 @@ public final class HttpTileSource implements TileSource {
             throw new TileException("fetching " + uri + ": " + e.getMessage(), e);
         }
         int status = response.statusCode();
-        if (status == 404 || status == 204) return Optional.empty();
+        long maxAge = maxAge(response.headers().firstValue("Cache-Control").orElse(""));
+        if (status == 404 || status == 204) return new RawTile(null, maxAge);
         if (status / 100 != 2) throw new TileException("HTTP " + status + " for " + uri);
         byte[] body;
         try {
@@ -83,8 +96,29 @@ public final class HttpTileSource implements TileSource {
         } catch (IOException e) {
             throw new TileException("reading " + uri + ": " + e.getMessage(), e);
         }
-        if (body.length == 0) return Optional.empty();
-        return Optional.of(MvtDecoder.decode(id, body));
+        return new RawTile(body.length == 0 ? null : body, maxAge);
+    }
+
+    /** Seconds from {@code max-age}, 0 for {@code no-store} or {@code no-cache}, otherwise {@link RawTile#UNKNOWN_AGE}. */
+    static long maxAge(String cacheControl) {
+        long maxAge = RawTile.UNKNOWN_AGE;
+        for (String directive : cacheControl.toLowerCase(java.util.Locale.ROOT).split(",")) {
+            String d = directive.strip();
+            if (d.equals("no-store") || d.equals("no-cache")) return 0;
+            if (d.startsWith("max-age=")) {
+                try {
+                    maxAge = Math.max(0, Long.parseLong(d.substring(8).strip()));
+                } catch (NumberFormatException ignored) {
+                    // Malformed: treat as absent.
+                }
+            }
+        }
+        return maxAge;
+    }
+
+    /** The URL template in use (after TileJSON resolution). */
+    public String template() {
+        return template;
     }
 
     @Override

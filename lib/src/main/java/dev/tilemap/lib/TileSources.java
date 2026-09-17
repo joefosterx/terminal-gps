@@ -26,8 +26,20 @@ public final class TileSources {
 
     /** Like {@link #open(SourceConfig)} with a cache of {@code cacheTiles} decoded tiles, or none if zero. */
     public static TileSource open(SourceConfig config, int cacheTiles) throws IOException {
+        return open(config, cacheTiles, null);
+    }
+
+    /**
+     * Like {@link #open(SourceConfig, int)}; when {@code diskCacheRoot} is not null, tiles from a URL source are also
+     * kept on disk under it (see {@link DiskCachedTileSource}).
+     */
+    public static TileSource open(SourceConfig config, int cacheTiles, java.nio.file.Path diskCacheRoot) throws IOException {
         TileSource raw = switch (config) {
-            case SourceConfig.Url url -> http(url);
+            case SourceConfig.Url url -> {
+                HttpTileSource http = http(url);
+                yield diskCacheRoot == null ? http
+                        : new DiskCachedTileSource(http, DiskCachedTileSource.directoryFor(diskCacheRoot, http), System::currentTimeMillis);
+            }
             case SourceConfig.PmTiles pm -> PmTilesSource.open(pm.path());
             case SourceConfig.GeoJson gj -> GeoJsonTileSource.parse(
                     new InputStreamReader(new ByteArrayInputStream(gj.bytes()), StandardCharsets.UTF_8));

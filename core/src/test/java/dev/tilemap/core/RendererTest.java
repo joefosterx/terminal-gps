@@ -123,6 +123,26 @@ class RendererTest {
     }
 
     @Test
+    void fillPatternsCoverOnlyTheirDots() throws RenderException {
+        Paint dotted = new Paint(PaintKind.FILL, Rgb.fromHex("#00ff00"), null, Weight.LIGHT, GlyphStrategy.BRAILLE, '●',
+                Styles.pattern("⠪", "test"));
+        Style style = new Style(List.of(layer("area", dotted)));
+        assertEquals("⠪⠪⠪⠪\n⠪⠪⠪⠪\n", Renderer.render(VIEW, style, Capabilities.DEFAULT, SQUARE_AND_LINE).toPlain());
+    }
+
+    @Test
+    void styleCanCapCharsetAndDropColor() throws RenderException {
+        Style asciiMono = new Style(ROADS.layers(), List.of(), Charset.ASCII, true);
+        Canvas c = Renderer.render(VIEW, asciiMono, charset(Charset.BRAILLE), CROSSING);
+        assertEquals("  | \n==+=\n", c.toPlain());
+        for (Cell cell : c.cells()) {
+            assertEquals(null, cell.fg());
+            assertEquals(null, cell.bg());
+        }
+        assertEquals(new Attrs(true, false), c.cell(0, 1).attrs(), "weight still shows as bold");
+    }
+
+    @Test
     void layersOutsideTheirZoomRangeAreSkipped() throws RenderException {
         Style style = new Style(List.of(new StyleLayer("area", "area", Map.of(), 5, 25,
                 paint(PaintKind.FILL, "#00ff00", null, Weight.LIGHT, GlyphStrategy.BRAILLE))));

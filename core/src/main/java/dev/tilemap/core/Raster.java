@@ -12,6 +12,11 @@ final class Raster {
      * adjacent polygons neither overlap nor leave gaps.
      */
     static void fillPolygon(DotBuffer buf, List<double[]> rings, short layer) {
+        fillPolygon(buf, rings, layer, Paint.SOLID);
+    }
+
+    /** Like {@link #fillPolygon(DotBuffer, List, short)}, setting only dots in {@code pattern} (see {@link Paint#pattern()}). */
+    static void fillPolygon(DotBuffer buf, List<double[]> rings, short layer, int pattern) {
         double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
         int edgeCount = 0;
@@ -81,7 +86,14 @@ final class Raster {
                 // Dots whose center x + 0.5 lies in [xs[k], xs[k+1]).
                 int from = Math.max(0, (int) Math.ceil(xs[k] - 0.5));
                 int to = Math.min(buf.width() - 1, (int) Math.ceil(xs[k + 1] - 0.5) - 1);
-                for (int x = from; x <= to; x++) buf.set(x, y, layer);
+                if (pattern == Paint.SOLID) {
+                    for (int x = from; x <= to; x++) buf.set(x, y, layer);
+                } else {
+                    int rowBits = pattern >> ((y & 3) << 1);
+                    for (int x = from; x <= to; x++) {
+                        if ((rowBits >> (x & 1) & 1) != 0) buf.set(x, y, layer);
+                    }
+                }
             }
         }
     }

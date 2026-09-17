@@ -1,0 +1,15 @@
+{
+  "extends": "default",
+  "paint": {
+    "forest": {"fg": "#4e7a45", "bg": "#17261a"},
+    "park": {"fg": "#5f8f55", "bg": "#1a2b1c"},
+    "water": {"fg": "#3f76a8", "bg": "#132436"},
+    "waterway": {"fg": "#3f76a8"},
+    "building": {"fg": "#6b6259", "bg": "#2a2623"},
+    "rail": {"fg": "#8a8a8a"},
+    "road-minor": {"fg": "#7a7a7a"},
+    "road-major": {"fg": "#e0a040"},
+    "poi": {"fg": "#d08a5a"},
+    "station": {"fg": "#b58ad6"}
+  }
+}

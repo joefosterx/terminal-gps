@@ -24,6 +24,7 @@ public final class Ansi {
         StringBuilder p = new StringBuilder();
         if (cell.attrs().bold()) p.append(";1");
         if (cell.attrs().dim()) p.append(";2");
+        if (cell.attrs().reverse()) p.append(";7");
         if (cell.fg() != null) appendColor(p, cell.fg(), depth, false);
         if (cell.bg() != null) appendColor(p, cell.bg(), depth, true);
         return p.isEmpty() ? "" : "\u001b[0" + p + "m";

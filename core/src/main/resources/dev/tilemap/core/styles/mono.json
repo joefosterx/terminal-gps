@@ -1,0 +1,9 @@
+{
+  "extends": "default",
+  "monochrome": true,
+  "paint": {
+    "forest": {"pattern": "⢕"},
+    "park": {"pattern": "⠅"},
+    "water": {"pattern": "⠶"}
+  }
+}

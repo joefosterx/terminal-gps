@@ -1,0 +1,9 @@
+{
+  "extends": "mono",
+  "maxCharset": "ascii",
+  "paint": {
+    "forest": {"pattern": "⢕"},
+    "park": {"pattern": "⠉"},
+    "water": {"pattern": "⣀"}
+  }
+}

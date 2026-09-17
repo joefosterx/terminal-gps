@@ -62,6 +62,41 @@ class StylesTest {
     }
 
     @Test
+    void presetsLoadAndExtendDefault() {
+        for (String name : Styles.PRESETS) {
+            Style s = Styles.preset(name).orElseThrow();
+            assertEquals(Styles.defaultStyle().layers().size(), s.layers().size(), name);
+            assertEquals(Styles.defaultStyle().labels(), s.labels(), name);
+        }
+        Style vt220 = Styles.preset("VT220").orElseThrow();
+        assertEquals(Capabilities.Charset.ASCII, vt220.maxCharset());
+        assertTrue(vt220.monochrome());
+        assertTrue(Styles.preset("mono").orElseThrow().monochrome());
+        assertTrue(Styles.preset("nope").isEmpty());
+    }
+
+    @Test
+    void extendsWithPaintOverrides() {
+        Style s = Styles.fromJson(new StringReader("""
+                {"extends": "default", "paint": {"water": {"fg": "#010203", "bg": null, "pattern": "⠪"}}}
+                """));
+        StyleLayer water = s.layers().stream().filter(l -> l.id().equals("water")).findFirst().orElseThrow();
+        StyleLayer original = Styles.defaultStyle().layers().stream().filter(l -> l.id().equals("water")).findFirst().orElseThrow();
+        assertEquals(new Rgb(1, 2, 3), water.paint().fg());
+        assertNull(water.paint().bg());
+        assertEquals(original.paint().kind(), water.paint().kind());
+        assertTrue(water.protect());
+        // ⠪ raises dots 2, 4 and 6: (row 1, col 0), (row 0, col 1), (row 2, col 1).
+        assertEquals((1 << 2) | (1 << 1) | (1 << 5), water.paint().pattern());
+
+        assertThrows(IllegalArgumentException.class, () -> Styles.fromJson(new StringReader(
+                "{\"extends\": \"default\", \"paint\": {\"lava\": {\"fg\": \"#ff0000\"}}}")));
+        assertThrows(IllegalArgumentException.class, () -> Styles.fromJson(new StringReader("{\"extends\": \"gothic\"}")));
+        assertThrows(IllegalArgumentException.class, () -> Styles.fromJson(new StringReader(
+                "{\"extends\": \"default\", \"paint\": {\"water\": {\"pattern\": \"x\"}}}")));
+    }
+
+    @Test
     void reportsBadInput() {
         assertThrows(IllegalArgumentException.class, () -> Styles.fromJson(new StringReader("{}")));
         assertThrows(IllegalArgumentException.class, () -> Styles.fromJson(new StringReader("not json")));

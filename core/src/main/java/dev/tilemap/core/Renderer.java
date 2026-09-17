@@ -62,7 +62,7 @@ public final class Renderer {
                 }
             }
         }
-        Cell[] out = compose(vp, style, caps.charset(), dots, cells);
+        Cell[] out = compose(vp, style, style.effectiveCharset(caps.charset()), dots, cells);
         if (!labelPass.candidates().isEmpty()) labelPass.place(out, style.layers());
         return new Canvas(vp.cols(), vp.rows(), out);
     }
@@ -96,7 +96,7 @@ public final class Renderer {
                 List<double[]> rings = new ArrayList<>(p.rings().size());
                 for (double[] ring : p.rings()) rings.add(proj.toDots(ring));
                 if (paint.kind() == PaintKind.FILL) {
-                    Raster.fillPolygon(dots, rings, layer);
+                    Raster.fillPolygon(dots, rings, layer, paint.pattern());
                 } else {
                     for (double[] ring : rings) {
                         if (traced) {
@@ -179,8 +179,9 @@ public final class Renderer {
                         case ASCII -> Glyphs.asciiDots(grid);
                     };
                 }
-                Rgb bg = bgLayer >= 0 ? layers.get(bgLayer).paint().bg() : null;
-                out[row * vp.cols() + col] = new Cell(glyph, paint.fg(), bg, attrs(paint), top);
+                Rgb bg = bgLayer >= 0 && !style.monochrome() ? layers.get(bgLayer).paint().bg() : null;
+                Rgb fg = style.monochrome() ? null : paint.fg();
+                out[row * vp.cols() + col] = new Cell(glyph, fg, bg, attrs(paint), top);
             }
         }
         return out;
@@ -192,7 +193,7 @@ public final class Renderer {
     }
 
     /** Tile-local coordinates to viewport dots for one tile. */
-    private record TileProjector(double ax, double bx, double ay, double by) {
+    record TileProjector(double ax, double bx, double ay, double by) {
         TileProjector(ViewTransform view, TileId id) {
             this(
                     view.scaleX() / ((double) (1 << id.z()) * Tile.EXTENT),
