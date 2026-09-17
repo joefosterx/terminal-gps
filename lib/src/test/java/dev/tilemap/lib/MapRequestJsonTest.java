@@ -29,6 +29,7 @@ class MapRequestJsonTest {
         assertEquals(Styles.defaultStyle(), req.style());
         assertEquals(Capabilities.DEFAULT, req.caps());
         assertEquals(SourceConfig.OPENFREEMAP, req.source());
+        assertEquals(true, req.labels());
     }
 
     @Test
@@ -40,13 +41,14 @@ class MapRequestJsonTest {
         Path file = dir.resolve("req.json");
         Files.writeString(file, """
                 {"area": {"bbox": [9.99, 49.99, 10.01, 50.01]}, "size": [60, 20], "style": "mono.json",
-                 "charset": "box", "color": "true", "source": "town.geojson"}
+                 "charset": "box", "color": "true", "source": "town.geojson", "labels": false}
                 """);
         MapRequest req = MapRequestJson.read(file);
         assertInstanceOf(Area.BBox.class, req.area());
         assertEquals(new Capabilities(Charset.BOX, ColorDepth.TRUE), req.caps());
         assertEquals("w", req.style().layers().getFirst().id());
         assertInstanceOf(SourceConfig.GeoJson.class, req.source());
+        assertEquals(false, req.labels());
         TileMap.renderCanvas(req);
     }
 

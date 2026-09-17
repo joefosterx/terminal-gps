@@ -27,7 +27,17 @@ import java.util.Map;
  *
  * Only {@code id}, {@code source}, {@code paint.kind} and {@code paint.fg} are required. Enum names are
  * case-insensitive and may use dashes ({@code box-line}). {@code paint.marker} is a single character for the
- * {@code marker} strategy (default {@code ●}).
+ * {@code marker} strategy (default {@code ●}). A layer with {@code "protect": true} (such as water) is never covered
+ * by labels.
+ *
+ * <p>An optional {@code "labels"} array holds {@link LabelRule}s:
+ *
+ * <pre>{@code
+ * {"id": "town", "source": "place", "filter": {"class": "town"}, "minZoom": 10,
+ *  "field": "name", "priority": 90, "maxWidth": 24, "bold": true}
+ * }</pre>
+ *
+ * Only {@code id} and {@code source} are required.
  */
 public final class Styles {
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -64,11 +74,30 @@ public final class Styles {
         if (layers == null || !layers.isArray()) throw new IllegalArgumentException("style needs a \"layers\" array");
         List<StyleLayer> out = new ArrayList<>();
         for (JsonNode l : layers) out.add(layer(l));
-        return new Style(out);
+        List<LabelRule> labels = new ArrayList<>();
+        JsonNode labelNodes = root.get("labels");
+        if (labelNodes != null && !labelNodes.isNull()) {
+            if (!labelNodes.isArray()) throw new IllegalArgumentException("\"labels\" must be an array");
+            for (JsonNode l : labelNodes) labels.add(label(l));
+        }
+        return new Style(out, labels);
     }
 
-    private static StyleLayer layer(JsonNode l) {
-        String id = text(l, "id", "layer");
+    private static LabelRule label(JsonNode l) {
+        String id = text(l, "id", "label");
+        return new LabelRule(
+                id,
+                text(l, "source", id),
+                filter(l),
+                l.path("minZoom").asDouble(0),
+                l.path("maxZoom").asDouble(DEFAULT_MAX_ZOOM),
+                l.hasNonNull("field") ? l.get("field").asText() : LabelRule.DEFAULT_FIELD,
+                l.path("priority").asInt(0),
+                l.path("maxWidth").asInt(LabelRule.DEFAULT_MAX_WIDTH),
+                l.path("bold").asBoolean(false));
+    }
+
+    private static Map<String, List<String>> filter(JsonNode l) {
         Map<String, List<String>> filter = new LinkedHashMap<>();
         JsonNode f = l.get("filter");
         if (f != null) {
@@ -82,6 +111,12 @@ public final class Styles {
                 filter.put(e.getKey(), values);
             }
         }
+        return filter;
+    }
+
+    private static StyleLayer layer(JsonNode l) {
+        String id = text(l, "id", "layer");
+        Map<String, List<String>> filter = filter(l);
         JsonNode p = l.get("paint");
         if (p == null) throw new IllegalArgumentException("layer " + id + ": missing \"paint\"");
         Paint paint = new Paint(
@@ -97,7 +132,8 @@ public final class Styles {
                 filter,
                 l.path("minZoom").asDouble(0),
                 l.path("maxZoom").asDouble(DEFAULT_MAX_ZOOM),
-                paint);
+                paint,
+                l.path("protect").asBoolean(false));
     }
 
     private static String text(JsonNode node, String field, String context) {

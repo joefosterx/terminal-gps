@@ -97,13 +97,22 @@ final class Raster {
      * are clipped one cell beyond the grid so roads leaving the screen still point off-screen.
      */
     static void traceCells(CellBuffer cells, double[] pts, boolean closed, short layer) {
+        walkPolyline(pts, closed, cells.cols(), cells.rows(), (ax, ay, bx, by) -> cells.connect(ax, ay, bx, by, layer));
+    }
+
+    /** Receives each 4-neighbor step of a cell walk. */
+    interface CellStep {
+        void step(int fromCol, int fromRow, int toCol, int toRow);
+    }
+
+    /** Walks a dot-space polyline through cells, clipped one cell beyond a {@code cols × rows} grid. */
+    static void walkPolyline(double[] pts, boolean closed, int cols, int rows, CellStep step) {
         int points = pts.length / 2;
         int segments = closed ? points : points - 1;
         for (int s = 0; s < segments; s++) {
             int e = (s + 1) % points;
-            double[] c = clip(pts[2 * s] / 2, pts[2 * s + 1] / 4, pts[2 * e] / 2, pts[2 * e + 1] / 4,
-                    -1, -1, cells.cols() + 1, cells.rows() + 1);
-            if (c != null) walkCells(cells, c[0], c[1], c[2], c[3], layer);
+            double[] c = clip(pts[2 * s] / 2, pts[2 * s + 1] / 4, pts[2 * e] / 2, pts[2 * e + 1] / 4, -1, -1, cols + 1, rows + 1);
+            if (c != null) walkCells(c[0], c[1], c[2], c[3], step);
         }
     }
 
@@ -111,7 +120,7 @@ final class Raster {
      * Amanatides–Woo grid traversal: visits every cell the segment passes through, one 4-neighbor step at a time.
      * A segment passing exactly through a cell corner steps horizontally first.
      */
-    private static void walkCells(CellBuffer cells, double x0, double y0, double x1, double y1, short layer) {
+    private static void walkCells(double x0, double y0, double x1, double y1, CellStep step) {
         int cx = (int) Math.floor(x0), cy = (int) Math.floor(y0);
         int ex = (int) Math.floor(x1), ey = (int) Math.floor(y1);
         double dx = x1 - x0, dy = y1 - y0;
@@ -123,11 +132,11 @@ final class Raster {
         int steps = Math.abs(ex - cx) + Math.abs(ey - cy);
         for (int i = 0; i < steps; i++) {
             if (tMaxX <= tMaxY) {
-                cells.connect(cx, cy, cx + stepX, cy, layer);
+                step.step(cx, cy, cx + stepX, cy);
                 cx += stepX;
                 tMaxX += tDeltaX;
             } else {
-                cells.connect(cx, cy, cx, cy + stepY, layer);
+                step.step(cx, cy, cx, cy + stepY);
                 cy += stepY;
                 tMaxY += tDeltaY;
             }

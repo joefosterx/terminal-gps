@@ -9,16 +9,20 @@ import java.util.TreeMap;
 /**
  * One drawing rule: features from source layer {@code source} whose tags match {@code filter}, drawn with
  * {@code paint} when {@code minZoom <= zoom < maxZoom}. A filter entry matches when the tag's value is one of
- * the listed values; the single value {@code "*"} matches any value as long as the tag is present.
+ * the listed values; the single value {@code "*"} matches any value as long as the tag is present. Cells owned by a
+ * {@code protect}ed layer are never covered by labels.
  */
-public record StyleLayer(String id, String source, Map<String, List<String>> filter, double minZoom, double maxZoom, Paint paint) {
+public record StyleLayer(String id, String source, Map<String, List<String>> filter, double minZoom, double maxZoom,
+                         Paint paint, boolean protect) {
     public StyleLayer {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(source, "source");
         Objects.requireNonNull(paint, "paint");
-        TreeMap<String, List<String>> sorted = new TreeMap<>();
-        filter.forEach((k, v) -> sorted.put(k, List.copyOf(v)));
-        filter = Collections.unmodifiableMap(sorted);
+        filter = normalize(filter);
+    }
+
+    public StyleLayer(String id, String source, Map<String, List<String>> filter, double minZoom, double maxZoom, Paint paint) {
+        this(id, source, filter, minZoom, maxZoom, paint, false);
     }
 
     public boolean visibleAt(double zoom) {
@@ -26,6 +30,16 @@ public record StyleLayer(String id, String source, Map<String, List<String>> fil
     }
 
     public boolean matches(Feature f) {
+        return matches(filter, f);
+    }
+
+    static Map<String, List<String>> normalize(Map<String, List<String>> filter) {
+        TreeMap<String, List<String>> sorted = new TreeMap<>();
+        filter.forEach((k, v) -> sorted.put(k, List.copyOf(v)));
+        return Collections.unmodifiableMap(sorted);
+    }
+
+    static boolean matches(Map<String, List<String>> filter, Feature f) {
         for (var e : filter.entrySet()) {
             String value = f.tags().get(e.getKey());
             if (value == null) return false;

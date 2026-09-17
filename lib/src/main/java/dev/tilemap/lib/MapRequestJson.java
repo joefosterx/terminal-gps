@@ -26,7 +26,8 @@ import java.util.Locale;
  *   "charset": "braille",                                   // ascii | latin1 | box | braille | sextant
  *   "color": "256",                                         // none | 16 | 256 | true
  *   "source": "https://tiles.openfreemap.org/planet",       // URL, .pmtiles or .geojson path
- *   "key": null
+ *   "key": null,
+ *   "labels": true
  * }
  * }</pre>
  *
@@ -64,7 +65,7 @@ public final class MapRequestJson {
                 root.hasNonNull("charset") ? charset(root.get("charset").asText()) : Capabilities.DEFAULT.charset(),
                 root.hasNonNull("color") ? colorDepth(root.get("color").asText()) : Capabilities.DEFAULT.color());
         return new MapRequest(area(root.path("area")), size.get(0).asInt(), size.get(1).asInt(),
-                style(root.get("style"), baseDir), caps, source);
+                style(root.get("style"), baseDir), caps, source, root.path("labels").asBoolean(true));
     }
 
     private static Area area(JsonNode area) {

@@ -89,7 +89,7 @@ public final class Main implements Callable<Integer> {
     @Option(names = "--key", paramLabel = "KEY", description = "API key for the tile server (default: $TILEMAP_KEY).")
     String key;
 
-    @Option(names = "--no-labels", description = "Skip the label pass (labels are not implemented yet; accepted for scripts).")
+    @Option(names = "--no-labels", description = "Skip the label pass (fastest).")
     boolean noLabels;
 
     @Option(names = "--strict", description = "On tile failures, write nothing instead of a partial map.")
@@ -169,7 +169,8 @@ public final class Main implements Callable<Integer> {
                     new Capabilities(
                             charset != null ? MapRequestJson.charset(charset) : base.caps().charset(),
                             color != null ? MapRequestJson.colorDepth(color) : base.caps().color()),
-                    source != null ? sourceConfig() : base.source());
+                    source != null ? sourceConfig() : base.source(),
+                    base.labels() && !noLabels);
         }
 
         TerminalSize.Size cells = cells();
@@ -177,7 +178,7 @@ public final class Main implements Callable<Integer> {
         Capabilities caps = new Capabilities(
                 charset != null ? MapRequestJson.charset(charset) : Capabilities.DEFAULT.charset(),
                 color != null ? MapRequestJson.colorDepth(color) : Capabilities.DEFAULT.color());
-        return new MapRequest(area(), cells.cols(), cells.rows(), resolvedStyle, caps, sourceConfig());
+        return new MapRequest(area(), cells.cols(), cells.rows(), resolvedStyle, caps, sourceConfig(), !noLabels);
     }
 
     private Area area() {

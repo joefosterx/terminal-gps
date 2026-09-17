@@ -1,28 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="192" viewBox="0 0 320 192" font-family="'DejaVu Sans Mono', 'Cascadia Mono', Menlo, Consolas, monospace" font-size="14">
-<rect x="144" y="0" width="88" height="16" fill="#d8efc9"/>
+<rect x="144" y="0" width="24" height="16" fill="#d8efc9"/>
 <rect x="240" y="0" width="40" height="16" fill="#aad3df"/>
 <rect x="288" y="0" width="32" height="16" fill="#d8efc9"/>
 <rect x="144" y="16" width="176" height="16" fill="#d8efc9"/>
-<rect x="24" y="32" width="72" height="16" fill="#d9d0c9"/>
+<rect x="24" y="32" width="48" height="16" fill="#d9d0c9"/>
 <rect x="144" y="32" width="176" height="16" fill="#d8efc9"/>
 <rect x="24" y="48" width="72" height="16" fill="#d9d0c9"/>
-<rect x="144" y="48" width="176" height="16" fill="#d8efc9"/>
+<rect x="144" y="48" width="40" height="16" fill="#d8efc9"/>
+<rect x="280" y="48" width="40" height="16" fill="#d8efc9"/>
 <rect x="24" y="64" width="72" height="16" fill="#d9d0c9"/>
 <rect x="144" y="64" width="176" height="16" fill="#d8efc9"/>
 <rect x="24" y="80" width="72" height="16" fill="#d9d0c9"/>
 <rect x="144" y="80" width="176" height="16" fill="#d8efc9"/>
-<rect x="144" y="96" width="176" height="16" fill="#d8efc9"/>
+<rect x="224" y="96" width="96" height="16" fill="#d8efc9"/>
 <rect x="144" y="112" width="176" height="16" fill="#d8efc9"/>
-<text x="0" y="12" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇</tspan><tspan> </tspan><tspan fill="#5d9bd5">⠉⠉⠉⠉⠉</tspan><tspan> </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿</tspan></text>
+<text x="0" y="12" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿</tspan><tspan>Mill Pond</tspan><tspan fill="#5d9bd5">⠉⠉⠉⠉⠉</tspan><tspan> </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿</tspan></text>
 <text x="0" y="28" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⣤⣤⣤⣤⣤⣤⣤⣼⣿⣿⣿</tspan></text>
-<text x="0" y="44" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>   </tspan><tspan fill="#b8a99a">⢰⣶⣶⣶⣶⣶⣶⣶⣶</tspan><tspan>   </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
-<text x="0" y="60" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>   </tspan><tspan fill="#b8a99a">⢸⣿⣿⣿⣿⣿⣿⣿⣿</tspan><tspan>   </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
+<text x="0" y="44" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>   </tspan><tspan fill="#b8a99a">⢰⣶⣶⣶⣶⣶</tspan><tspan>Old Town </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
+<text x="0" y="60" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>   </tspan><tspan fill="#b8a99a">⢸⣿⣿⣿⣿⣿⣿⣿⣿</tspan><tspan>   </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿</tspan><tspan>Central Park</tspan><tspan fill="#8cc97a">⣿⣿⣿⣿⣿</tspan></text>
 <text x="0" y="76" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>   </tspan><tspan fill="#b8a99a">⢸⣿⣿⣿⣿⣿⣿⣿⣿</tspan><tspan>   </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
 <text x="0" y="92" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>   </tspan><tspan fill="#b8a99a">⢸⣿⣿⣿⣿⣿⣿⣿⣿</tspan><tspan>   </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
-<text x="0" y="108" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
+<text x="0" y="108" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan> Main Street</tspan><tspan fill="#8cc97a">⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿</tspan></text>
 <text x="0" y="124" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>  </tspan><tspan fill="#8cc97a">⠈⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉</tspan></text>
 <text x="0" y="140" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>                        </tspan></text>
-<text x="0" y="156" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan fill="#d98a1c" font-weight="bold">━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━┳━━━━━━━</tspan></text>
+<text x="0" y="156" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan fill="#d98a1c" font-weight="bold">━━━━━━━━━━━━━</tspan><tspan>Bridge Street</tspan><tspan fill="#d98a1c" font-weight="bold">━━━━━━┳━━━━━━━</tspan></text>
 <text x="0" y="172" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>                </tspan><tspan fill="#8a8a8a">│</tspan><tspan>       </tspan></text>
 <text x="0" y="188" textLength="320" lengthAdjust="spacingAndGlyphs" xml:space="preserve"><tspan>               </tspan><tspan fill="#d98a1c" font-weight="bold">┃</tspan><tspan>                </tspan><tspan fill="#8a8a8a">│</tspan><tspan>       </tspan></text>
 </svg>

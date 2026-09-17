@@ -64,6 +64,20 @@ class MainTest {
     }
 
     @Test
+    void noLabelsFlagSkipsLabels() throws Exception {
+        int code = run("--center", "10.0005,49.9995", "--zoom", "15", "--size", "100x40", "--source", town().toString(), "--no-labels");
+        assertEquals(0, code, stderr());
+        MapRequest req = new MapRequest(new Area.Center(10.0005, 49.9995, 15), 100, 40, null, null,
+                new SourceConfig.GeoJson(Files.readAllBytes(town())), false);
+        assertEquals(TileMap.renderString(req, Format.PLAIN), stdout());
+        assertTrue(!stdout().contains("Bridge Street"));
+
+        out.reset();
+        run("--center", "10.0005,49.9995", "--zoom", "15", "--size", "100x40", "--source", town().toString());
+        assertTrue(stdout().contains("Bridge Street"), stdout());
+    }
+
+    @Test
     void negativeCoordinatesParse() {
         int code = run("--center", "-0.1276,51.5072", "--zoom", "14", "--size", "4x2", "--source", town().toString());
         assertEquals(0, code, stderr());

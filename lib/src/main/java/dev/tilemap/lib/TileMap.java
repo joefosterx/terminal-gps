@@ -93,7 +93,7 @@ public final class TileMap {
             }
         };
         try {
-            Canvas canvas = Renderer.render(req.viewport(), req.style(), req.caps(), lenient);
+            Canvas canvas = Renderer.render(req.viewport(), req.style(), req.caps(), lenient, req.labels());
             return new Result(canvas, failures);
         } catch (RenderException e) {
             throw new TileMapException(e.getMessage(), e);

@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The pipeline: plan tiles, fetch, filter by style, rasterize into dots or cells, map to glyphs.
- * Labels arrive in milestone 5.
+ * The pipeline: plan tiles, fetch, filter by style, rasterize into dots or cells, map to glyphs, place labels.
  */
 public final class Renderer {
     private Renderer() {}
@@ -16,13 +15,25 @@ public final class Renderer {
     enum DotGlyph { BRAILLE, BLOCK, SHADE, ASCII }
 
     public static Canvas render(Viewport vp, Style style, Capabilities caps, TileSource src) throws RenderException {
+        return render(vp, style, caps, src, true);
+    }
+
+    /** Renders with or without the label pass; skipping labels is the fastest render. */
+    public static Canvas render(Viewport vp, Style style, Capabilities caps, TileSource src, boolean labels) throws RenderException {
         ViewTransform view = ViewTransform.of(vp);
         DotBuffer dots = new DotBuffer(vp.cols(), vp.rows());
         CellBuffer cells = new CellBuffer(vp.cols(), vp.rows());
+        Labels labelPass = new Labels(vp.cols(), vp.rows());
 
         List<Integer> visible = new ArrayList<>();
         for (int i = 0; i < style.layers().size(); i++) {
             if (style.layers().get(i).visibleAt(vp.zoom())) visible.add(i);
+        }
+        List<LabelRule> labelRules = new ArrayList<>();
+        if (labels) {
+            for (LabelRule rule : style.labels()) {
+                if (rule.visibleAt(vp.zoom())) labelRules.add(rule);
+            }
         }
 
         for (TileId id : tilesFor(vp, src.maxZoom())) {
@@ -42,9 +53,18 @@ public final class Renderer {
                         if (sl.draws(f.geom()) && sl.matches(f)) draw(dots, cells, proj, f.geom(), sl.paint(), (short) i);
                     }
                 }
+                for (LabelRule rule : labelRules) {
+                    if (!rule.source().equals(layer.name())) continue;
+                    for (Feature f : layer.features()) {
+                        String text = f.tags().get(rule.field());
+                        if (text != null && rule.matches(f)) labelPass.add(rule, proj.toDots(f.geom()), text);
+                    }
+                }
             }
         }
-        return compose(vp, style, caps.charset(), dots, cells);
+        Cell[] out = compose(vp, style, caps.charset(), dots, cells);
+        if (!labelPass.candidates().isEmpty()) labelPass.place(out, style.layers());
+        return new Canvas(vp.cols(), vp.rows(), out);
     }
 
     /** Tiles backing a viewport, row-major from the north-west, so callers can prefetch. */
@@ -114,7 +134,7 @@ public final class Renderer {
      * layer's foreground. The background comes from the highest layer present in the cell that has a background
      * color, so a road over a park keeps the park.
      */
-    private static Canvas compose(Viewport vp, Style style, Charset charset, DotBuffer dots, CellBuffer cells) {
+    private static Cell[] compose(Viewport vp, Style style, Charset charset, DotBuffer dots, CellBuffer cells) {
         List<StyleLayer> layers = style.layers();
         DotGlyph[] dotGlyphs = new DotGlyph[layers.size()];
         for (int i = 0; i < dotGlyphs.length; i++) dotGlyphs[i] = dotGlyph(layers.get(i).paint().strategy(), charset);
@@ -163,7 +183,7 @@ public final class Renderer {
                 out[row * vp.cols() + col] = new Cell(glyph, paint.fg(), bg, attrs(paint), top);
             }
         }
-        return new Canvas(vp.cols(), vp.rows(), out);
+        return out;
     }
 
     /** Heavy lines are bold so major roads still stand out without color. */
@@ -179,6 +199,14 @@ public final class Renderer {
                     view.dotX((double) id.x() / (1 << id.z())),
                     view.scaleY() / ((double) (1 << id.z()) * Tile.EXTENT),
                     view.dotY((double) id.y() / (1 << id.z())));
+        }
+
+        Geometry toDots(Geometry g) {
+            return switch (g) {
+                case Geometry.Point p -> new Geometry.Point(toDots(p.coords()));
+                case Geometry.Line l -> new Geometry.Line(l.parts().stream().map(this::toDots).toList());
+                case Geometry.Polygon p -> new Geometry.Polygon(p.rings().stream().map(this::toDots).toList());
+            };
         }
 
         double[] toDots(double[] local) {
