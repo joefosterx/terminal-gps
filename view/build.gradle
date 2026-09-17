@@ -5,12 +5,18 @@ application { mainClass = 'dev.tilemap.view.Main' }
 dependencies {
     implementation project(':core')
     implementation project(':lib')
-    implementation libs.lanterna
+    // JLine rather than Lanterna: Lanterna 3.1 has no native Windows console support.
+    implementation libs.jline.terminal
+    runtimeOnly libs.jline.terminal.jni
 }
 
 tasks.register('fatJar', Jar) {
     archiveFileName = 'tilemap-view.jar'
-    manifest { attributes 'Main-Class': application.mainClass.get() }
+    manifest {
+        attributes 'Main-Class': application.mainClass.get(),
+                   // JLine loads its native console library; JDK 22+ warns without this.
+                   'Enable-Native-Access': 'ALL-UNNAMED'
+    }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath

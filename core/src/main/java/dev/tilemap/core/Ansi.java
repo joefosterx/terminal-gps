@@ -2,9 +2,9 @@ package dev.tilemap.core;
 
 import dev.tilemap.core.Capabilities.ColorDepth;
 
-/** SGR encoding and color quantization. */
-final class Ansi {
-    static final String RESET = "\u001b[0m";
+/** SGR encoding and color quantization, shared by {@link Canvas#toAnsi} and interactive front ends. */
+public final class Ansi {
+    public static final String RESET = "\u001b[0m";
 
     /** Channel levels of the xterm 6×6×6 cube (indexes 16–231). */
     private static final int[] CUBE = {0, 95, 135, 175, 215, 255};
@@ -20,7 +20,7 @@ final class Ansi {
     private Ansi() {}
 
     /** The full SGR sequence that sets this cell's style from a reset state, or "" if it has none. */
-    static String sgr(Cell cell, ColorDepth depth) {
+    public static String sgr(Cell cell, ColorDepth depth) {
         StringBuilder p = new StringBuilder();
         if (cell.attrs().bold()) p.append(";1");
         if (cell.attrs().dim()) p.append(";2");
@@ -43,12 +43,12 @@ final class Ansi {
     }
 
     /** Nearest color in the 6×6×6 cube. Per-channel nearest is the Euclidean nearest because the cube is separable. */
-    static int to256(Rgb c) {
+    public static int to256(Rgb c) {
         return 16 + 36 * nearestLevel(c.r()) + 6 * nearestLevel(c.g()) + nearestLevel(c.b());
     }
 
     /** Nearest of the 16 basic colors by squared RGB distance; ties go to the lower index. */
-    static int to16(Rgb c) {
+    public static int to16(Rgb c) {
         int best = 0;
         int bestDist = Integer.MAX_VALUE;
         for (int i = 0; i < BASIC.length; i++) {

@@ -12,33 +12,70 @@ final class Raster {
      * adjacent polygons neither overlap nor leave gaps.
      */
     static void fillPolygon(DotBuffer buf, List<double[]> rings, short layer) {
+        double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
-        int edges = 0;
+        int edgeCount = 0;
         for (double[] ring : rings) {
-            for (int i = 1; i < ring.length; i += 2) {
-                minY = Math.min(minY, ring[i]);
-                maxY = Math.max(maxY, ring[i]);
+            for (int i = 0; i + 1 < ring.length; i += 2) {
+                minX = Math.min(minX, ring[i]);
+                maxX = Math.max(maxX, ring[i]);
+                minY = Math.min(minY, ring[i + 1]);
+                maxY = Math.max(maxY, ring[i + 1]);
             }
-            edges += ring.length / 2;
+            edgeCount += ring.length / 2;
         }
+        if (maxX < 0 || minX > buf.width() || maxY < 0 || minY > buf.height()) return;
         int y0 = Math.max(0, (int) Math.floor(minY));
         int y1 = Math.min(buf.height() - 1, (int) Math.ceil(maxY));
-        double[] xs = new double[Math.max(2, edges)];
+        if (y0 > y1) return;
 
+        // Edge table. An edge crosses scanline y (center sy = y + 0.5) when (ay <= sy) != (by <= sy), i.e. for rows
+        // first..last. Edges are bucketed by first row so each scanline only visits the edges that span it.
+        int rowsSpan = y1 - y0 + 1;
+        double[] ex = new double[edgeCount], ey = new double[edgeCount], edx = new double[edgeCount], edy = new double[edgeCount];
+        int[] last = new int[edgeCount];
+        int[] bucketNext = new int[edgeCount];
+        int[] bucketHead = new int[rowsSpan];
+        Arrays.fill(bucketHead, -1);
+        int e = 0;
+        for (double[] ring : rings) {
+            int points = ring.length / 2;
+            for (int p = 0; p < points; p++) {
+                int q = (p + 1) % points;
+                double ax = ring[2 * p], ay = ring[2 * p + 1];
+                double bx = ring[2 * q], by = ring[2 * q + 1];
+                if (ay == by) continue;
+                double top = Math.min(ay, by), bottom = Math.max(ay, by);
+                int first = Math.max(y0, firstRowAtOrBelow(top));
+                int lastRow = Math.min(y1, lastRowAbove(bottom));
+                if (first > lastRow) continue;
+                ex[e] = ax;
+                ey[e] = ay;
+                edx[e] = bx - ax;
+                edy[e] = by - ay;
+                last[e] = lastRow;
+                bucketNext[e] = bucketHead[first - y0];
+                bucketHead[first - y0] = e;
+                e++;
+            }
+        }
+
+        int[] active = new int[e];
+        int activeCount = 0;
+        double[] xs = new double[Math.max(2, e)];
         for (int y = y0; y <= y1; y++) {
+            for (int i = bucketHead[y - y0]; i >= 0; i = bucketNext[i]) active[activeCount++] = i;
             double sy = y + 0.5;
             int count = 0;
-            for (double[] ring : rings) {
-                int points = ring.length / 2;
-                for (int p = 0; p < points; p++) {
-                    int q = (p + 1) % points;
-                    double ax = ring[2 * p], ay = ring[2 * p + 1];
-                    double bx = ring[2 * q], by = ring[2 * q + 1];
-                    if ((ay <= sy) != (by <= sy)) {
-                        xs[count++] = ax + (sy - ay) * (bx - ax) / (by - ay);
-                    }
-                }
+            int kept = 0;
+            for (int k = 0; k < activeCount; k++) {
+                int i = active[k];
+                if (last[i] < y) continue;
+                active[kept++] = i;
+                // Same expression as a direct edge intersection, so results are bit-identical.
+                xs[count++] = ex[i] + (sy - ey[i]) * edx[i] / edy[i];
             }
+            activeCount = kept;
             Arrays.sort(xs, 0, count);
             for (int k = 0; k + 1 < count; k += 2) {
                 // Dots whose center x + 0.5 lies in [xs[k], xs[k+1]).
@@ -47,6 +84,22 @@ final class Raster {
                 for (int x = from; x <= to; x++) buf.set(x, y, layer);
             }
         }
+    }
+
+    /** The smallest row whose center {@code y + 0.5} is at or below {@code top}. */
+    private static int firstRowAtOrBelow(double top) {
+        int y = (int) Math.max(Integer.MIN_VALUE / 2, Math.min(Integer.MAX_VALUE / 2, Math.ceil(top - 0.5)));
+        while (y + 0.5 < top) y++;
+        while (y - 1 + 0.5 >= top) y--;
+        return y;
+    }
+
+    /** The largest row whose center {@code y + 0.5} is strictly above {@code bottom}. */
+    private static int lastRowAbove(double bottom) {
+        int y = (int) Math.max(Integer.MIN_VALUE / 2, Math.min(Integer.MAX_VALUE / 2, Math.ceil(bottom - 0.5) - 1));
+        while (y + 0.5 >= bottom) y--;
+        while (y + 1 + 0.5 < bottom) y++;
+        return y;
     }
 
     /** Draws a polyline; {@code closed} adds the segment from the last point back to the first. */

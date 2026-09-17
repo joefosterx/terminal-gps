@@ -21,12 +21,18 @@ public final class TileSources {
      * result if it is {@link AutoCloseable} (PMTiles holds an open file).
      */
     public static TileSource open(SourceConfig config) throws IOException {
-        return switch (config) {
-            case SourceConfig.Url url -> new CachingTileSource(http(url), DEFAULT_CACHE_TILES);
-            case SourceConfig.PmTiles pm -> new CachingTileSource(PmTilesSource.open(pm.path()), DEFAULT_CACHE_TILES);
+        return open(config, DEFAULT_CACHE_TILES);
+    }
+
+    /** Like {@link #open(SourceConfig)} with a cache of {@code cacheTiles} decoded tiles, or none if zero. */
+    public static TileSource open(SourceConfig config, int cacheTiles) throws IOException {
+        TileSource raw = switch (config) {
+            case SourceConfig.Url url -> http(url);
+            case SourceConfig.PmTiles pm -> PmTilesSource.open(pm.path());
             case SourceConfig.GeoJson gj -> GeoJsonTileSource.parse(
                     new InputStreamReader(new ByteArrayInputStream(gj.bytes()), StandardCharsets.UTF_8));
         };
+        return cacheTiles > 0 && !(raw instanceof GeoJsonTileSource) ? new CachingTileSource(raw, cacheTiles) : raw;
     }
 
     private static HttpTileSource http(SourceConfig.Url url) throws IOException {
