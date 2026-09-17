@@ -1,0 +1,8 @@
+apply plugin: 'java-library'
+apply plugin: 'java-test-fixtures'
+
+dependencies {
+    implementation libs.protobuf.java      // MVT wire format (CodedInputStream only, no generated code)
+    implementation libs.jackson.databind   // style and GeoJSON parsing
+    testFixturesImplementation libs.protobuf.java
+}

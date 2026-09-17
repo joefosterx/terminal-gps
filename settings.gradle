@@ -1,0 +1,7 @@
+plugins {
+    // Lets Gradle download the Java 21 toolchain when it is not installed.
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'tilemap'
+include 'core', 'lib', 'cli', 'view'

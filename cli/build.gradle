@@ -1,0 +1,19 @@
+apply plugin: 'application'
+
+application { mainClass = 'dev.tilemap.cli.Main' }
+
+dependencies {
+    implementation project(':lib')
+    implementation libs.picocli
+}
+
+tasks.register('fatJar', Jar) {
+    archiveFileName = 'tilemap.jar'
+    manifest { attributes 'Main-Class': application.mainClass.get() }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+}
+assemble.dependsOn tasks.named('fatJar')

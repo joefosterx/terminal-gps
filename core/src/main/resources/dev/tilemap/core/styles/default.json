@@ -1,0 +1,68 @@
+{
+  "layers": [
+    {
+      "id": "forest",
+      "source": "landcover",
+      "filter": { "class": "wood" },
+      "paint": { "kind": "fill", "fg": "#6fa060", "bg": "#cfe3c4", "strategy": "braille" }
+    },
+    {
+      "id": "park",
+      "source": "landcover",
+      "filter": { "class": "grass" },
+      "paint": { "kind": "fill", "fg": "#8cc97a", "bg": "#d8efc9", "strategy": "braille" }
+    },
+    {
+      "id": "water",
+      "source": "water",
+      "paint": { "kind": "fill", "fg": "#5d9bd5", "bg": "#aad3df", "strategy": "braille" }
+    },
+    {
+      "id": "waterway",
+      "source": "waterway",
+      "filter": { "class": ["river", "canal", "stream"] },
+      "minZoom": 12,
+      "paint": { "kind": "line", "fg": "#5d9bd5", "weight": "light", "strategy": "braille" }
+    },
+    {
+      "id": "building",
+      "source": "building",
+      "minZoom": 14,
+      "paint": { "kind": "fill", "fg": "#b8a99a", "bg": "#d9d0c9", "strategy": "braille" }
+    },
+    {
+      "id": "rail",
+      "source": "transportation",
+      "filter": { "class": "rail" },
+      "minZoom": 13,
+      "paint": { "kind": "line", "fg": "#707070", "weight": "double", "strategy": "box-line" }
+    },
+    {
+      "id": "road-minor",
+      "source": "transportation",
+      "filter": { "class": ["minor", "service", "tertiary", "track"] },
+      "minZoom": 13,
+      "paint": { "kind": "line", "fg": "#8a8a8a", "weight": "light", "strategy": "box-line" }
+    },
+    {
+      "id": "road-major",
+      "source": "transportation",
+      "filter": { "class": ["motorway", "trunk", "primary", "secondary"] },
+      "paint": { "kind": "line", "fg": "#d98a1c", "weight": "heavy", "strategy": "box-line" }
+    },
+    {
+      "id": "poi",
+      "source": "poi",
+      "filter": { "class": ["town_hall", "library", "hospital", "school", "place_of_worship", "museum"] },
+      "minZoom": 15,
+      "paint": { "kind": "point", "fg": "#a0522d", "strategy": "marker", "marker": "●" }
+    },
+    {
+      "id": "station",
+      "source": "poi",
+      "filter": { "class": "railway", "subclass": "station" },
+      "minZoom": 14,
+      "paint": { "kind": "point", "fg": "#7b3fa0", "strategy": "marker", "marker": "▲" }
+    }
+  ]
+}

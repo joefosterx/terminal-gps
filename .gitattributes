@@ -1,0 +1,6 @@
+# Golden files are compared byte-for-byte; never convert line endings.
+*.txt     text eol=lf
+*.geojson text eol=lf
+*.json    text eol=lf
+gradlew   text eol=lf
+*.bat     text eol=crlf

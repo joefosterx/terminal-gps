@@ -1,0 +1,23 @@
+def junitBom = libs.junit.bom
+
+subprojects {
+    apply plugin: 'java'
+    group = 'dev.tilemap'
+    version = '0.1.0-SNAPSHOT'
+    java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+    repositories { mavenCentral() }
+    dependencies {
+        testImplementation platform(junitBom)
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        // Shared fixtures live at the root; goldens are regenerated with -PupdateGoldens.
+        systemProperty 'tilemap.fixtures', rootProject.file('fixtures').absolutePath
+        systemProperty 'tilemap.updateGoldens', project.hasProperty('updateGoldens')
+        // Tests that hit a public tile server run only with -Plive.
+        systemProperty 'tilemap.live', project.hasProperty('live')
+    }
+    tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+}
