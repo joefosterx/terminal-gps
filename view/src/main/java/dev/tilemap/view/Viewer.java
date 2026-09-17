@@ -1,6 +1,7 @@
 package dev.tilemap.view;
 
 import dev.tilemap.core.Canvas;
+import dev.tilemap.core.Inspector;
 import dev.tilemap.core.LonLat;
 import dev.tilemap.core.Projection;
 import dev.tilemap.core.RenderException;
@@ -102,9 +103,58 @@ final class Viewer {
                 missing.add(tileRect(vp, id));
             }
         }
-        List<String> overlay = state.help ? KeyHandler.HELP : List.of();
+        if (state.copy != AppState.Copy.NONE) {
+            display.copy(state.copy == AppState.Copy.PLAIN ? map.toPlain() : map.toAnsi(state.caps));
+            state.message = "copied " + mapCols + "x" + mapRows + (state.copy == AppState.Copy.PLAIN ? " text" : " ANSI");
+            state.copy = AppState.Copy.NONE;
+        }
+
+        FrameComposer.Overlay overlay = FrameComposer.Overlay.NONE;
+        int[] cursor = null;
+        if (state.help) {
+            overlay = new FrameComposer.Overlay(KeyHandler.HELP, FrameComposer.Placement.CENTER);
+        } else if (state.inspect) {
+            state.cursorCol = Math.min(state.cursorCol, mapCols - 1);
+            state.cursorRow = Math.min(state.cursorRow, mapRows - 1);
+            cursor = new int[] {state.cursorCol, state.cursorRow};
+            FrameComposer.Placement side = state.cursorCol < mapCols / 2 ? FrameComposer.Placement.RIGHT : FrameComposer.Placement.LEFT;
+            overlay = new FrameComposer.Overlay(inspectLines(vp, Math.max(3, mapRows - 2), Math.max(20, mapCols / 2 - 4)), side);
+        }
         display.draw(FrameComposer.compose(map, cols, rows, missing, statusLeft(visible.size(), loaded), statusRight(), overlay,
-                state.caps.charset()), cols, rows, state.caps.color());
+                cursor, state.style.effectiveCharset(state.caps.charset())), cols, rows, state.caps.color());
+    }
+
+    /** The inspect panel: the cursor position, then each hit's layer and tags (translated names left out). */
+    private List<String> inspectLines(Viewport vp, int maxLines, int width) {
+        LonLat at = state.at(state.cursorCol, state.cursorRow, mapCols, mapRows);
+        List<String> lines = new ArrayList<>();
+        lines.add(String.format(Locale.ROOT, "%.5f, %.5f   Esc closes", at.lat(), at.lon()));
+        List<Inspector.Hit> hits;
+        try {
+            hits = Inspector.at(vp, state.style, cache, state.cursorCol, state.cursorRow);
+        } catch (RenderException e) {
+            throw new IllegalStateException("the tile cache never fails", e);
+        }
+        if (hits.isEmpty()) lines.add("(no features here)");
+        for (Inspector.Hit hit : hits) {
+            lines.add("");
+            lines.add(hit.layer() + "  (" + hit.source() + ")");
+            hit.tags().entrySet().stream()
+                    .filter(e -> !e.getKey().startsWith("name:") && !e.getKey().startsWith("name_"))
+                    .sorted(java.util.Map.Entry.comparingByKey())
+                    .forEach(e -> lines.add("  " + e.getKey() + " = " + e.getValue()));
+        }
+        List<String> out = new ArrayList<>();
+        for (String line : lines) {
+            if (out.size() == maxLines) {
+                out.set(maxLines - 1, "…");
+                break;
+            }
+            out.add(line.codePointCount(0, line.length()) > width
+                    ? new String(line.codePoints().limit(width - 1).toArray(), 0, width - 1) + "…"
+                    : line);
+        }
+        return out;
     }
 
     /** Drops labels after several frames over budget; zooming, go-to or pressing n brings them back. */
@@ -121,13 +171,14 @@ final class Viewer {
 
     private String statusLeft(int visible, int loaded) {
         if (state.prompt != null) return " Go to lon,lat[,zoom]: " + state.prompt + "_";
+        // Most important first: the bar is truncated from the right on narrow terminals.
         LonLat c = state.center();
-        StringBuilder sb = new StringBuilder(String.format(Locale.ROOT, " %.5f, %.5f  z%.2f  tiles %d/%d  queue %d  %d ms",
-                c.lat(), c.lon(), state.zoom, loaded, visible, cache.pending(), lastRenderNanos / 1_000_000));
+        StringBuilder sb = new StringBuilder(String.format(Locale.ROOT, " %.5f, %.5f  z%.2f", c.lat(), c.lon(), state.zoom));
+        if (!state.message.isEmpty()) sb.append("  ").append(state.message);
+        if (state.labelsPausedForSpeed) sb.append("  labels paused (slow)");
         int failed = cache.failed();
         if (failed > 0) sb.append("  ").append(failed).append(" failed: ").append(cache.lastError());
-        if (state.labelsPausedForSpeed) sb.append("  labels paused (slow)");
-        if (!state.message.isEmpty()) sb.append("  ").append(state.message);
+        sb.append(String.format(Locale.ROOT, "  tiles %d/%d  queue %d  %d ms", loaded, visible, cache.pending(), lastRenderNanos / 1_000_000));
         return sb.toString();
     }
 

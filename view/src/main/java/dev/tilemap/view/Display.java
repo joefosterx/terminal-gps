@@ -12,6 +12,9 @@ interface Display extends AutoCloseable {
     /** Shows {@code frame} ({@code cols × rows}, row-major), redrawing only what changed since the last call. */
     void draw(Cell[] frame, int cols, int rows, ColorDepth depth);
 
+    /** Puts text on the system clipboard, if the terminal supports it. */
+    default void copy(String text) {}
+
     /** Forgets what is on screen so the next draw repaints everything (after a resize). */
     void invalidate();
 

@@ -117,6 +117,69 @@ class KeyHandlerTest {
     }
 
     @Test
+    void dragMovesTheMapWithThePointer() {
+        double x = s.centerX, y = s.centerY, world = Projection.worldDots(14);
+        assertFalse(KeyHandler.handle(s, Key.mouse(Key.Type.MOUSE_DOWN, 40, 10), 80, 30));
+        assertTrue(KeyHandler.handle(s, Key.mouse(Key.Type.MOUSE_DRAG, 43, 12), 80, 30));
+        assertEquals(x - 3 * 2 / world, s.centerX, 1e-15);
+        assertEquals(y - 2 * 4 / world, s.centerY, 1e-15);
+        KeyHandler.handle(s, Key.mouse(Key.Type.MOUSE_UP, 43, 12), 80, 30);
+        assertFalse(KeyHandler.handle(s, Key.mouse(Key.Type.MOUSE_DRAG, 50, 12), 80, 30), "no drag after release");
+    }
+
+    @Test
+    void wheelZoomKeepsThePointUnderThePointer() {
+        LonLat before = s.at(70, 5, 80, 30);
+        assertTrue(KeyHandler.handle(s, Key.mouse(Key.Type.WHEEL_UP, 70, 5), 80, 30));
+        assertEquals(14.5, s.zoom);
+        LonLat after = s.at(70, 5, 80, 30);
+        assertEquals(before.lon(), after.lon(), 1e-9);
+        assertEquals(before.lat(), after.lat(), 1e-9);
+        KeyHandler.handle(s, Key.mouse(Key.Type.WHEEL_DOWN, 70, 5), 80, 30);
+        assertEquals(14, s.zoom);
+        assertFalse(KeyHandler.handle(s, Key.mouse(Key.Type.WHEEL_UP, 70, 30), 80, 30), "the status bar is not map");
+    }
+
+    @Test
+    void inspectModeMovesACursorInsteadOfTheMap() {
+        double x = s.centerX;
+        press('i');
+        assertTrue(s.inspect);
+        assertEquals(40, s.cursorCol);
+        assertEquals(15, s.cursorRow);
+        press('l');
+        press('L');
+        press(Key.Type.UP);
+        assertEquals(49, s.cursorCol);
+        assertEquals(14, s.cursorRow);
+        assertEquals(x, s.centerX, "the map did not move");
+        KeyHandler.handle(s, Key.mouse(Key.Type.MOUSE_DOWN, 3, 4), 80, 30);
+        assertEquals(3, s.cursorCol);
+        for (int i = 0; i < 10; i++) press('h');
+        assertEquals(0, s.cursorCol, "clamped to the map");
+        press('+');
+        assertEquals(15, s.zoom, "zoom still works while inspecting");
+        press(Key.Type.ESCAPE);
+        assertFalse(s.inspect);
+    }
+
+    @Test
+    void copyRequests() {
+        press('y');
+        assertEquals(AppState.Copy.PLAIN, s.copy);
+        press('Y');
+        assertEquals(AppState.Copy.ANSI, s.copy);
+    }
+
+    @Test
+    void presetsCycle() {
+        press('s');
+        assertEquals("dark", s.styleName);
+        for (int i = 0; i < 4; i++) press('s');
+        assertEquals("default", s.styleName);
+    }
+
+    @Test
     void panningClampsAtTheWorldEdge() {
         AppState edge = new AppState(new LonLat(-180, 85), 0, "default", Styles.defaultStyle(), Capabilities.DEFAULT);
         for (int i = 0; i < 50; i++) KeyHandler.handle(edge, Key.of(Key.Type.SHIFT_UP), 80, 30);

@@ -58,7 +58,26 @@ class KeyDecoderTest {
     }
 
     @Test
+    void sgrMouseReports() throws IOException {
+        assertEquals(List.of(
+                Key.mouse(Key.Type.MOUSE_DOWN, 9, 4),
+                Key.mouse(Key.Type.MOUSE_DRAG, 11, 5),
+                Key.mouse(Key.Type.MOUSE_UP, 11, 5),
+                Key.mouse(Key.Type.WHEEL_UP, 0, 0),
+                Key.mouse(Key.Type.WHEEL_DOWN, 2, 3)),
+                decode(chars("\u001b[<0;10;5M\u001b[<32;12;6M\u001b[<0;12;6m\u001b[<64;1;1M\u001b[<65;3;4M\u001b[<2;3;4M")));
+    }
+
+    @Test
+    void legacyMouseReports() throws IOException {
+        // urxvt 1015: button + 32 in decimal. X10: three raw bytes, each + 32.
+        assertEquals(List.of(Key.mouse(Key.Type.MOUSE_DOWN, 4, 1), Key.mouse(Key.Type.MOUSE_UP, 4, 1),
+                        Key.mouse(Key.Type.MOUSE_DOWN, 0, 1), Key.mouse(Key.Type.WHEEL_UP, 2, 2)),
+                decode(chars("\u001b[32;5;2M\u001b[35;5;2M\u001b[M !\"\u001b[M`##")));
+    }
+
+    @Test
     void supplementaryCharacters() throws IOException {
-        assertEquals(List.of(new Key(Key.Type.CHAR, 0x1F600)), decode(chars("😀")));
+        assertEquals(List.of(Key.ofCodePoint(0x1F600)), decode(chars("😀")));
     }
 }

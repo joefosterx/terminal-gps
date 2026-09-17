@@ -32,6 +32,7 @@ class ViewerTest {
         volatile int cols;
         volatile int rows;
         final BlockingQueue<String> frames = new LinkedBlockingQueue<>();
+        final BlockingQueue<String> copies = new LinkedBlockingQueue<>();
         int invalidations;
 
         FakeDisplay(int cols, int rows) {
@@ -62,6 +63,11 @@ class ViewerTest {
         @Override
         public void invalidate() {
             invalidations++;
+        }
+
+        @Override
+        public void copy(String text) {
+            copies.add(text);
         }
 
         @Override
@@ -128,6 +134,19 @@ class ViewerTest {
             display.awaitFrame(f -> f.contains("pan one cell"));
             events.put(new Event.KeyPressed(Key.of(Key.Type.ESCAPE)));
             display.awaitFrame(f -> !f.contains("pan one cell"));
+
+            events.put(new Event.KeyPressed(Key.of('i')));
+            String inspecting = display.awaitFrame(f -> f.contains("Esc closes"));
+            assertTrue(inspecting.contains("(no features here)") || inspecting.contains("(transportation)")
+                    || inspecting.contains("(landcover)") || inspecting.contains("(building)"), inspecting);
+            events.put(new Event.KeyPressed(Key.of(Key.Type.ESCAPE)));
+            display.awaitFrame(f -> !f.contains("Esc closes"));
+
+            events.put(new Event.KeyPressed(Key.of('y')));
+            display.awaitFrame(f -> f.contains("copied 100x30 text"));
+            String copied = display.copies.take();
+            assertEquals(30, copied.lines().count());
+            assertTrue(copied.contains("Bridge Street") || copied.contains("Main Street"), copied);
 
             display.cols = 60;
             display.rows = 20;

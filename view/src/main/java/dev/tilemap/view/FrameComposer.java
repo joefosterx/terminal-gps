@@ -18,15 +18,23 @@ final class FrameComposer {
     /** A rectangle of map cells, {@code [col0, col1) × [row0, row1)}. */
     record Rect(int col0, int row0, int col1, int row1) {}
 
+    enum Placement { CENTER, LEFT, RIGHT }
+
+    /** A boxed list of lines drawn over the map. */
+    record Overlay(List<String> lines, Placement placement) {
+        static final Overlay NONE = new Overlay(List.of(), Placement.CENTER);
+    }
+
     private FrameComposer() {}
 
     /**
      * @param map the rendered map, {@code cols × (rows - 1)}
      * @param missing areas whose tiles have not loaded; their empty cells get a placeholder shade
-     * @param overlay lines for a centered box, or an empty list
+     * @param overlay a box of lines, or {@link Overlay#NONE}
+     * @param cursor the inspect cursor as {@code {col, row}}, or null
      */
     static Cell[] compose(Canvas map, int cols, int rows, List<Rect> missing, String statusLeft, String statusRight,
-                          List<String> overlay, Charset charset) {
+                          Overlay overlay, int[] cursor, Charset charset) {
         Cell[] frame = new Cell[cols * rows];
         boolean unicode = charset.compareTo(Charset.BOX) >= 0;
         int mapRows = Math.min(rows - 1, map.rows());
@@ -45,7 +53,12 @@ final class FrameComposer {
             }
         }
 
-        if (!overlay.isEmpty()) box(frame, cols, mapRows, overlay, unicode);
+        if (cursor != null && cursor[0] >= 0 && cursor[0] < cols && cursor[1] >= 0 && cursor[1] < mapRows) {
+            Cell under = frame[cursor[1] * cols + cursor[0]];
+            int glyph = under.codePoint() == ' ' || under.codePoint() == placeholder.codePoint() ? '+' : under.codePoint();
+            frame[cursor[1] * cols + cursor[0]] = new Cell(glyph, null, null, new Attrs(true, false, true), under.layer());
+        }
+        if (!overlay.lines().isEmpty()) box(frame, cols, mapRows, overlay.lines(), overlay.placement(), unicode);
         statusBar(frame, cols, rows - 1, statusLeft, statusRight);
         return frame;
     }
@@ -67,10 +80,15 @@ final class FrameComposer {
         }
     }
 
-    private static void box(Cell[] frame, int cols, int rows, List<String> lines, boolean unicode) {
+    private static void box(Cell[] frame, int cols, int rows, List<String> lines, Placement placement, boolean unicode) {
         int inner = lines.stream().mapToInt(s -> s.codePointCount(0, s.length())).max().orElse(0) + 2;
         int width = Math.min(cols, inner + 2), height = Math.min(rows, lines.size() + 2);
-        int left = (cols - width) / 2, top = (rows - height) / 2;
+        int left = switch (placement) {
+            case CENTER -> (cols - width) / 2;
+            case LEFT -> 0;
+            case RIGHT -> cols - width;
+        };
+        int top = placement == Placement.CENTER ? (rows - height) / 2 : 0;
         char h = unicode ? '─' : '-', v = unicode ? '│' : '|';
         char tl = unicode ? '┌' : '+', tr = unicode ? '┐' : '+', bl = unicode ? '└' : '+', br = unicode ? '┘' : '+';
         for (int r = 0; r < height; r++) {

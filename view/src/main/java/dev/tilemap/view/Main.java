@@ -1,13 +1,19 @@
 package dev.tilemap.view;
 
+import dev.tilemap.core.Capabilities;
+import dev.tilemap.core.Capabilities.Charset;
 import dev.tilemap.core.Style;
 import dev.tilemap.core.TileSource;
+import dev.tilemap.lib.DiskCachedTileSource;
 import dev.tilemap.lib.MapRequestJson;
 import dev.tilemap.lib.SourceConfig;
 import dev.tilemap.lib.TileSources;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.OptionalInt;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,11 +31,16 @@ public final class Main {
 
     static int run(String[] args) {
         PrintStream err = new PrintStream(System.err, true, StandardCharsets.UTF_8);
+        Map<String, String> env = System.getenv();
+        Path home = Path.of(System.getProperty("user.home"));
+        String os = System.getProperty("os.name", "");
         ViewerOptions opts;
         Style style;
         SourceConfig config;
         try {
-            opts = ViewerOptions.parse(args, System.getenv());
+            Path configFile = ViewerOptions.configFlag(args);
+            if (configFile == null) configFile = ViewerConfig.defaultPath(env, home);
+            opts = ViewerOptions.parse(args, env, ViewerConfig.load(configFile), configFile);
             if (opts.help()) {
                 System.out.print(ViewerOptions.USAGE);
                 return 0;
@@ -46,13 +57,15 @@ public final class Main {
 
         TileSource upstream;
         try {
-            upstream = TileSources.open(config, 0);
+            Path cacheRoot = !opts.diskCache() ? null
+                    : opts.cacheDir() != null ? opts.cacheDir() : DiskCachedTileSource.defaultRoot(env, os, home);
+            upstream = TileSources.open(config, 0, cacheRoot);
         } catch (IOException e) {
             err.println("tilemap-view: cannot open source: " + e.getMessage());
             return 3;
         }
-        String attribution = config.equals(SourceConfig.OPENFREEMAP) || (config instanceof SourceConfig.Url u
-                && u.template().equals(SourceConfig.OPENFREEMAP.template())) ? "© OpenMapTiles © OpenStreetMap" : "";
+        String attribution = config instanceof SourceConfig.Url u && u.template().equals(SourceConfig.OPENFREEMAP.template())
+                ? "© OpenMapTiles © OpenStreetMap" : "";
 
         try (Terminal terminal = TerminalBuilder.builder().system(true)
                      // stdout otherwise follows stdout.encoding, which is the legacy code page on Windows.
@@ -64,16 +77,20 @@ public final class Main {
                 return 2;
             }
             BlockingQueue<Event> events = new LinkedBlockingQueue<>();
-            AppState state = new AppState(opts.center(), opts.zoom(), opts.style(), style,
-                    TerminalCaps.detect(System.getenv(), System.getProperty("os.name", ""), opts.charset(), opts.color()));
+            Capabilities caps = TerminalCaps.detect(env, os, opts.charset(), opts.color());
+            AppState state = new AppState(opts.center(), opts.zoom(), opts.style(), style, caps);
             state.labels = opts.labels();
-            TileCache cache = new TileCache(upstream, TileCache.DEFAULT_CAPACITY, fetchers,
+            TileCache cache = new TileCache(upstream, opts.memoryTiles(), fetchers,
                     id -> events.offer(new Event.TileArrived(id)), System::nanoTime);
 
             terminal.handle(Terminal.Signal.WINCH, s -> events.offer(new Event.Resized()));
             terminal.handle(Terminal.Signal.INT, s -> events.offer(new Event.KeyPressed(Key.of(Key.Type.INTERRUPT))));
 
             try (JLineDisplay display = new JLineDisplay(terminal)) {
+                if (opts.charset() == null && caps.charset().compareTo(Charset.BRAILLE) >= 0) {
+                    state.caps = probed(caps, TerminalProbe.brailleWidth(terminal));
+                    if (state.caps.charset() != caps.charset()) state.message = "braille renders wide here; using box drawing (--charset overrides)";
+                }
                 Thread input = Thread.ofPlatform().daemon().name("tilemap-input").start(() -> readKeys(terminal, events));
                 new Viewer(state, cache, display, events, attribution).run();
                 input.interrupt();
@@ -94,6 +111,12 @@ public final class Main {
                 }
             }
         }
+    }
+
+    /** Falls back to box drawing when braille measured anything but one column; no answer keeps the guess. */
+    static Capabilities probed(Capabilities guess, OptionalInt brailleWidth) {
+        if (brailleWidth.isEmpty() || brailleWidth.getAsInt() == 1) return guess;
+        return new Capabilities(Charset.BOX, guess.color());
     }
 
     /** Runs on a dedicated platform thread until end of input. */
