@@ -6,8 +6,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 /** Opens a {@link TileSource} for a {@link SourceConfig}. */
 public final class TileSources {
@@ -31,12 +31,18 @@ public final class TileSources {
 
     /**
      * Like {@link #open(SourceConfig, int)}; when {@code diskCacheRoot} is not null, tiles from a URL source are also
-     * kept on disk under it (see {@link DiskCachedTileSource}).
+     * kept on disk under it (see {@link DiskCachedTileSource}). Uses the JVM's {@code java.net.http} fetcher.
      */
-    public static TileSource open(SourceConfig config, int cacheTiles, java.nio.file.Path diskCacheRoot) throws IOException {
+    public static TileSource open(SourceConfig config, int cacheTiles, Path diskCacheRoot) throws IOException {
+        // The fetcher is created only for URL sources, so this overload is usable on Android for file sources.
+        return open(config, cacheTiles, diskCacheRoot, config instanceof SourceConfig.Url ? HttpTileSource.defaultFetcher() : null);
+    }
+
+    /** Like {@link #open(SourceConfig, int, Path)} with the given {@link HttpFetcher} for URL sources. */
+    public static TileSource open(SourceConfig config, int cacheTiles, Path diskCacheRoot, HttpFetcher fetcher) throws IOException {
         TileSource raw = switch (config) {
             case SourceConfig.Url url -> {
-                HttpTileSource http = http(url);
+                HttpTileSource http = http(url, fetcher);
                 yield diskCacheRoot == null ? http
                         : new DiskCachedTileSource(http, DiskCachedTileSource.directoryFor(diskCacheRoot, http), System::currentTimeMillis);
             }
@@ -47,9 +53,8 @@ public final class TileSources {
         return cacheTiles > 0 && !(raw instanceof GeoJsonTileSource) ? new CachingTileSource(raw, cacheTiles) : raw;
     }
 
-    private static HttpTileSource http(SourceConfig.Url url) throws IOException {
-        HttpClient client = HttpTileSource.defaultClient();
-        if (HttpTileSource.isTemplate(url.template())) return new HttpTileSource(url.template(), url.key(), client);
-        return HttpTileSource.fromTileJson(URI.create(url.template()), url.key(), client);
+    private static HttpTileSource http(SourceConfig.Url url, HttpFetcher fetcher) throws IOException {
+        if (HttpTileSource.isTemplate(url.template())) return new HttpTileSource(url.template(), url.key(), fetcher);
+        return HttpTileSource.fromTileJson(URI.create(url.template()), url.key(), fetcher);
     }
 }

@@ -1,4 +1,4 @@
-package dev.tilemap.view;
+package dev.tilemap.viewer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,19 +27,19 @@ import java.util.Optional;
  * }
  * }</pre>
  */
-record ViewerConfig(String source, String key, String style, double[] center, Double zoom, String charset, String color,
+public record ViewerConfig(String source, String key, String style, double[] center, Double zoom, String charset, String color,
                     Boolean labels, Integer memoryTiles, Boolean diskCache, String cacheDir) {
-    static final ViewerConfig EMPTY = new ViewerConfig(null, null, null, null, null, null, null, null, null, null, null);
+    public static final ViewerConfig EMPTY = new ViewerConfig(null, null, null, null, null, null, null, null, null, null, null);
 
     /** {@code $XDG_CONFIG_HOME/tilemap/config.json}, falling back to {@code ~/.config/tilemap/config.json}. */
-    static Path defaultPath(Map<String, String> env, Path home) {
+    public static Path defaultPath(Map<String, String> env, Path home) {
         String xdg = env.get("XDG_CONFIG_HOME");
         Path base = xdg != null && !xdg.isBlank() ? Path.of(xdg) : home.resolve(".config");
         return base.resolve("tilemap").resolve("config.json");
     }
 
     /** Reads a config file; a missing file is an empty config, a malformed one an {@link IllegalArgumentException}. */
-    static ViewerConfig load(Path file) throws IOException {
+    public static ViewerConfig load(Path file) throws IOException {
         if (!Files.isRegularFile(file)) return EMPTY;
         JsonNode root;
         try {
@@ -82,7 +82,7 @@ record ViewerConfig(String source, String key, String style, double[] center, Do
         return p.isAbsolute() || !Files.exists(dir.resolve(p)) ? value : dir.resolve(p).toString();
     }
 
-    Optional<double[]> centerOpt() {
+    public Optional<double[]> centerOpt() {
         return Optional.ofNullable(center);
     }
 }

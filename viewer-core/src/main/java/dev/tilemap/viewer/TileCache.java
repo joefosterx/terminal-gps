@@ -1,4 +1,4 @@
-package dev.tilemap.view;
+package dev.tilemap.viewer;
 
 import dev.tilemap.core.Tile;
 import dev.tilemap.core.TileException;
@@ -22,10 +22,10 @@ import java.util.function.LongSupplier;
  * viewer can redraw. Fetches for tiles that are no longer wanted by the time a fetch slot frees up are skipped.
  * Failed tiles are retried after {@link #RETRY_NANOS}.
  */
-final class TileCache implements TileSource {
-    static final long RETRY_NANOS = 30_000_000_000L;
-    static final int DEFAULT_CAPACITY = 512;
-    static final int MAX_CONCURRENT_FETCHES = 8;
+public final class TileCache implements TileSource {
+    public static final long RETRY_NANOS = 30_000_000_000L;
+    public static final int DEFAULT_CAPACITY = 512;
+    public static final int MAX_CONCURRENT_FETCHES = 8;
 
     private final TileSource upstream;
     private final Executor executor;
@@ -38,7 +38,7 @@ final class TileCache implements TileSource {
     private volatile Set<TileId> wanted = Set.of();
     private volatile String lastError;
 
-    TileCache(TileSource upstream, int capacity, Executor executor, Consumer<TileId> onChange, LongSupplier clock) {
+    public TileCache(TileSource upstream, int capacity, Executor executor, Consumer<TileId> onChange, LongSupplier clock) {
         this.upstream = upstream;
         this.executor = executor;
         this.onChange = onChange;
@@ -67,7 +67,7 @@ final class TileCache implements TileSource {
     }
 
     /** Declares what the next frames need: {@code visible} is requested first, then {@code prefetch}. */
-    void want(Collection<TileId> visible, Collection<TileId> prefetch) {
+    public void want(Collection<TileId> visible, Collection<TileId> prefetch) {
         Set<TileId> all = new HashSet<>(visible);
         all.addAll(prefetch);
         wanted = all;
@@ -75,20 +75,20 @@ final class TileCache implements TileSource {
         for (TileId id : prefetch) request(id);
     }
 
-    synchronized boolean has(TileId id) {
+    public synchronized boolean has(TileId id) {
         return tiles.containsKey(id);
     }
 
-    synchronized int pending() {
+    public synchronized int pending() {
         return pending.size();
     }
 
-    synchronized int failed() {
+    public synchronized int failed() {
         long now = clock.getAsLong();
         return (int) retryAt.values().stream().filter(t -> t > now).count();
     }
 
-    String lastError() {
+    public String lastError() {
         return lastError;
     }
 

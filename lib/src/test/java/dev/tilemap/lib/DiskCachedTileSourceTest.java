@@ -55,7 +55,7 @@ class DiskCachedTileSourceTest {
             }
         });
         server.start();
-        http = new HttpTileSource("http://127.0.0.1:" + server.getAddress().getPort() + "/{z}/{x}/{y}.pbf", null, HttpTileSource.defaultClient());
+        http = new HttpTileSource("http://127.0.0.1:" + server.getAddress().getPort() + "/{z}/{x}/{y}.pbf", null, HttpTileSource.defaultFetcher());
     }
 
     @AfterEach
@@ -132,7 +132,7 @@ class DiskCachedTileSourceTest {
         assertEquals(HttpTileSource.RawTile.UNKNOWN_AGE, HttpTileSource.maxAge(""));
         assertEquals(HttpTileSource.RawTile.UNKNOWN_AGE, HttpTileSource.maxAge("max-age=soon"));
 
-        HttpTileSource other = new HttpTileSource("https://other.example/{z}/{x}/{y}", null, HttpTileSource.defaultClient());
+        HttpTileSource other = new HttpTileSource("https://other.example/{z}/{x}/{y}", null, HttpTileSource.defaultFetcher());
         assertNotEquals(DiskCachedTileSource.directoryFor(dir, http), DiskCachedTileSource.directoryFor(dir, other));
         assertEquals(Path.of("/x", "tilemap"), DiskCachedTileSource.defaultRoot(Map.of("XDG_CACHE_HOME", "/x"), "Linux", Path.of("/home/u")));
         assertEquals(Path.of("/home/u", ".cache", "tilemap"), DiskCachedTileSource.defaultRoot(Map.of(), "Linux", Path.of("/home/u")));

@@ -1,18 +1,19 @@
 package dev.tilemap.view;
 
 import dev.tilemap.core.Canvas;
-import dev.tilemap.core.Inspector;
 import dev.tilemap.core.LonLat;
-import dev.tilemap.core.Projection;
 import dev.tilemap.core.RenderException;
 import dev.tilemap.core.Renderer;
 import dev.tilemap.core.TileId;
 import dev.tilemap.core.Viewport;
+import dev.tilemap.viewer.AppState;
+import dev.tilemap.viewer.CellRect;
+import dev.tilemap.viewer.InspectPanel;
+import dev.tilemap.viewer.TileCache;
+import dev.tilemap.viewer.TilePlan;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -82,7 +83,7 @@ final class Viewer {
         mapRows = rows - 1;
         Viewport vp = state.viewport(mapCols, mapRows);
         List<TileId> visible = Renderer.tilesFor(vp, cache.maxZoom());
-        cache.want(visible, prefetch(vp, visible));
+        cache.want(visible, TilePlan.prefetch(vp, visible));
 
         long start = System.nanoTime();
         Canvas map;
@@ -94,13 +95,13 @@ final class Viewer {
         lastRenderNanos = System.nanoTime() - start;
         budget();
 
-        List<FrameComposer.Rect> missing = new ArrayList<>();
+        List<CellRect> missing = new ArrayList<>();
         int loaded = 0;
         for (TileId id : visible) {
             if (cache.has(id)) {
                 loaded++;
             } else {
-                missing.add(tileRect(vp, id));
+                missing.add(TilePlan.rect(vp, id));
             }
         }
         if (state.copy != AppState.Copy.NONE) {
@@ -118,43 +119,11 @@ final class Viewer {
             state.cursorRow = Math.min(state.cursorRow, mapRows - 1);
             cursor = new int[] {state.cursorCol, state.cursorRow};
             FrameComposer.Placement side = state.cursorCol < mapCols / 2 ? FrameComposer.Placement.RIGHT : FrameComposer.Placement.LEFT;
-            overlay = new FrameComposer.Overlay(inspectLines(vp, Math.max(3, mapRows - 2), Math.max(20, mapCols / 2 - 4)), side);
+            overlay = new FrameComposer.Overlay(InspectPanel.lines(state, cache, vp, mapCols, mapRows, "Esc closes",
+                    Math.max(3, mapRows - 2), Math.max(20, mapCols / 2 - 4)), side);
         }
         display.draw(FrameComposer.compose(map, cols, rows, missing, statusLeft(visible.size(), loaded), statusRight(), overlay,
                 cursor, state.style.effectiveCharset(state.caps.charset())), cols, rows, state.caps.color());
-    }
-
-    /** The inspect panel: the cursor position, then each hit's layer and tags (translated names left out). */
-    private List<String> inspectLines(Viewport vp, int maxLines, int width) {
-        LonLat at = state.at(state.cursorCol, state.cursorRow, mapCols, mapRows);
-        List<String> lines = new ArrayList<>();
-        lines.add(String.format(Locale.ROOT, "%.5f, %.5f   Esc closes", at.lat(), at.lon()));
-        List<Inspector.Hit> hits;
-        try {
-            hits = Inspector.at(vp, state.style, cache, state.cursorCol, state.cursorRow);
-        } catch (RenderException e) {
-            throw new IllegalStateException("the tile cache never fails", e);
-        }
-        if (hits.isEmpty()) lines.add("(no features here)");
-        for (Inspector.Hit hit : hits) {
-            lines.add("");
-            lines.add(hit.layer() + "  (" + hit.source() + ")");
-            hit.tags().entrySet().stream()
-                    .filter(e -> !e.getKey().startsWith("name:") && !e.getKey().startsWith("name_"))
-                    .sorted(java.util.Map.Entry.comparingByKey())
-                    .forEach(e -> lines.add("  " + e.getKey() + " = " + e.getValue()));
-        }
-        List<String> out = new ArrayList<>();
-        for (String line : lines) {
-            if (out.size() == maxLines) {
-                out.set(maxLines - 1, "…");
-                break;
-            }
-            out.add(line.codePointCount(0, line.length()) > width
-                    ? new String(line.codePoints().limit(width - 1).toArray(), 0, width - 1) + "…"
-                    : line);
-        }
-        return out;
     }
 
     /** Drops labels after several frames over budget; zooming, go-to or pressing n brings them back. */
@@ -187,35 +156,4 @@ final class Viewer {
         return attribution.isEmpty() ? right : attribution + "  " + right;
     }
 
-    /** The ring of tiles around the view and the parents of the visible tiles, so small pans and zoom-outs hit cache. */
-    static List<TileId> prefetch(Viewport vp, List<TileId> visible) {
-        Set<TileId> out = new LinkedHashSet<>();
-        if (!visible.isEmpty()) {
-            TileId first = visible.getFirst(), last = visible.getLast();
-            int z = first.z(), n = 1 << z;
-            for (int y = first.y() - 1; y <= last.y() + 1; y++) {
-                for (int x = first.x() - 1; x <= last.x() + 1; x++) {
-                    if (x >= 0 && y >= 0 && x < n && y < n) out.add(new TileId(z, x, y));
-                }
-            }
-            if (z > 0) {
-                for (TileId id : visible) out.add(new TileId(z - 1, id.x() / 2, id.y() / 2));
-            }
-        }
-        visible.forEach(out::remove);
-        return new ArrayList<>(out);
-    }
-
-    /** The map cells a tile covers, using the renderer's projection (a cell is 2 × 4 dots). */
-    static FrameComposer.Rect tileRect(Viewport vp, TileId id) {
-        double world = Projection.worldDots(vp.zoom());
-        double cx = Projection.mercX(vp.center().lon()), cy = Projection.mercY(vp.center().lat());
-        double n = 1 << id.z();
-        double x0 = ((id.x() / n - cx) * world + vp.cols()) / 2;
-        double x1 = (((id.x() + 1) / n - cx) * world + vp.cols()) / 2;
-        double scaleY = world * 2 * vp.cellAspect();
-        double y0 = ((id.y() / n - cy) * scaleY + vp.rows() * 2) / 4;
-        double y1 = (((id.y() + 1) / n - cy) * scaleY + vp.rows() * 2) / 4;
-        return new FrameComposer.Rect((int) Math.floor(x0), (int) Math.floor(y0), (int) Math.ceil(x1), (int) Math.ceil(y1));
-    }
 }

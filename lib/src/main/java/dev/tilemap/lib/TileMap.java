@@ -40,7 +40,7 @@ public final class TileMap {
     public static Canvas renderCanvas(MapRequest req) throws TileMapException {
         Result result = render(req);
         if (!result.complete()) {
-            TileFailure first = result.failures().getFirst();
+            TileFailure first = result.failures().get(0);
             throw new TileMapException(result.failures().size() + " tile(s) failed, first " + first.id() + ": " + first.message());
         }
         return result.canvas();

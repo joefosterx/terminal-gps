@@ -4,6 +4,9 @@ import dev.tilemap.core.Capabilities.Charset;
 import dev.tilemap.core.Capabilities.ColorDepth;
 import dev.tilemap.core.LonLat;
 import dev.tilemap.lib.MapRequestJson;
+import dev.tilemap.viewer.AppState;
+import dev.tilemap.viewer.TileCache;
+import dev.tilemap.viewer.ViewerConfig;
 import java.nio.file.Path;
 import java.util.Map;
 

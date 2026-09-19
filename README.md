@@ -309,6 +309,7 @@ example in a game engine. For non-JVM programs, use `tilemap --format json`.
 | --- | --- |
 | [`core/`](core/) | The renderer: projection, rasterizing, glyph selection, labels, styles, MVT decoding. No I/O and no terminal dependencies. |
 | [`lib/`](lib/) | Map requests, HTTP/PMTiles/GeoJSON tile sources, caching, output formats. |
+| [`viewer-core/`](viewer-core/) | The interactive viewers' shared model: view state, the async tile cache, prefetch. No terminal or Android code. |
 | [`cli/`](cli/) | The `tilemap` command. |
 | [`view/`](view/) | The `tilemap-view` interactive viewer, built on JLine. |
 | [`fixtures/`](fixtures/) | A small synthetic town in GeoJSON, used by the tests. |

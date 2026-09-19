@@ -1,0 +1,8 @@
+// The interactive viewers' shared model: no terminal, no Android, no java.net.http, no Java 21 APIs missing
+// from Android. Both :view and :android depend on it.
+apply plugin: 'java-library'
+
+dependencies {
+    api project(':lib')
+    implementation libs.jackson.databind   // config.json
+}

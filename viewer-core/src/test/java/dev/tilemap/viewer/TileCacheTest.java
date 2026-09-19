@@ -1,4 +1,4 @@
-package dev.tilemap.view;
+package dev.tilemap.viewer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

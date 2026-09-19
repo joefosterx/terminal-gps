@@ -1,6 +1,7 @@
 def junitBom = libs.junit.bom
 
-subprojects {
+// :android brings its own Java configuration through the Android plugin and refuses the java plugin.
+configure(subprojects.findAll { it.name != 'android' }) {
     apply plugin: 'java'
     group = 'dev.tilemap'
     version = '0.1.0-SNAPSHOT'

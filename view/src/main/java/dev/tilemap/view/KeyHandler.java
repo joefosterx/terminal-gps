@@ -1,9 +1,10 @@
 package dev.tilemap.view;
 
-import dev.tilemap.core.Capabilities;
 import dev.tilemap.core.Capabilities.ColorDepth;
+import dev.tilemap.core.Capabilities;
 import dev.tilemap.core.LonLat;
 import dev.tilemap.core.Styles;
+import dev.tilemap.viewer.AppState;
 import java.util.List;
 
 /** Applies key presses and mouse events to {@link AppState}. Pure: no terminal, no rendering. */

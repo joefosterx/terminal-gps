@@ -77,7 +77,7 @@ class HttpTileSourceTest {
 
     @Test
     void rendersTheFixtureOverHttp() throws Exception {
-        TileSource http = new HttpTileSource(base + "/tiles/{z}/{x}/{y}.pbf", null, HttpTileSource.defaultClient());
+        TileSource http = new HttpTileSource(base + "/tiles/{z}/{x}/{y}.pbf", null, HttpTileSource.defaultFetcher());
         TileSource geojson = TownTiles.geojson();
         String expected = Renderer.render(TownTiles.view(14), Styles.defaultStyle(), Capabilities.DEFAULT, geojson).toPlain();
         assertEquals(expected, Renderer.render(TownTiles.view(14), Styles.defaultStyle(), Capabilities.DEFAULT, http).toPlain());
@@ -86,17 +86,17 @@ class HttpTileSourceTest {
 
     @Test
     void notFoundIsEmptyAndServerErrorsThrow() throws Exception {
-        TileSource http = new HttpTileSource(base + "/tiles/{z}/{x}/{y}.pbf", null, HttpTileSource.defaultClient());
+        TileSource http = new HttpTileSource(base + "/tiles/{z}/{x}/{y}.pbf", null, HttpTileSource.defaultFetcher());
         assertTrue(http.fetch(new TileId(14, 0, 0)).isEmpty());
 
-        TileSource broken = new HttpTileSource(base + "/broken/{z}/{x}/{y}", null, HttpTileSource.defaultClient());
+        TileSource broken = new HttpTileSource(base + "/broken/{z}/{x}/{y}", null, HttpTileSource.defaultFetcher());
         TileException e = assertThrows(TileException.class, () -> broken.fetch(new TileId(1, 0, 0)));
         assertTrue(e.getMessage().contains("HTTP 503"), e.getMessage());
     }
 
     @Test
     void keysAreSubstitutedOrAppended() {
-        var client = HttpTileSource.defaultClient();
+        var client = HttpTileSource.defaultFetcher();
         TileId id = new TileId(3, 4, 5);
         assertEquals(URI.create("https://t.example/3/4/5.pbf?api_key=a%2Bb"),
                 new HttpTileSource("https://t.example/{z}/{x}/{y}.pbf?api_key={key}", "a+b", client).uri(id));

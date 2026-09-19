@@ -58,14 +58,21 @@ public final class PmTilesSource implements TileSource, AutoCloseable {
     }
 
     public static PmTilesSource open(Path path) throws IOException {
-        FileChannel file = FileChannel.open(path, StandardOpenOption.READ);
+        return open(FileChannel.open(path, StandardOpenOption.READ), path.toString());
+    }
+
+    /**
+     * Opens an archive from an already open channel (for example one behind an Android content URI), which the
+     * returned source owns and closes. {@code name} is used in error messages only.
+     */
+    public static PmTilesSource open(FileChannel file, String name) throws IOException {
         try {
             Header header = header(read(file, 0, HEADER_BYTES));
             if (header.tileType != TILE_TYPE_MVT && header.tileType != TILE_TYPE_UNKNOWN) {
-                throw new IOException(path + ": not a vector tile archive (tile type " + header.tileType + ")");
+                throw new IOException(name + ": not a vector tile archive (tile type " + header.tileType + ")");
             }
-            checkCompression(header.internalCompression, path + " directories");
-            checkCompression(header.tileCompression, path + " tiles");
+            checkCompression(header.internalCompression, name + " directories");
+            checkCompression(header.tileCompression, name + " tiles");
             Directory root = directory(decompress(read(file, header.rootOffset, header.rootLength), header.internalCompression));
             return new PmTilesSource(file, header, root);
         } catch (IOException | RuntimeException e) {

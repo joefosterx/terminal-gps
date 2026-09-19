@@ -211,7 +211,9 @@ final class Labels {
     private List<int[]> path(double[] dots, boolean closed) {
         List<int[]> path = new ArrayList<>();
         Raster.walkPolyline(dots, closed, cols, rows, (fx, fy, tx, ty) -> {
-            if (path.isEmpty() || path.getLast()[0] != fx || path.getLast()[1] != fy) path.add(new int[] {fx, fy});
+            // No List.getLast(): the core must stay loadable on Android, which lacks SequencedCollection.
+            int[] last = path.isEmpty() ? null : path.get(path.size() - 1);
+            if (last == null || last[0] != fx || last[1] != fy) path.add(new int[] {fx, fy});
             path.add(new int[] {tx, ty});
         });
         return path;

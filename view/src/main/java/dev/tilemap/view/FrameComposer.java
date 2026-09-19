@@ -5,6 +5,8 @@ import dev.tilemap.core.Canvas;
 import dev.tilemap.core.Capabilities.Charset;
 import dev.tilemap.core.Cell;
 import dev.tilemap.core.Rgb;
+import dev.tilemap.viewer.CellRect;
+import dev.tilemap.viewer.Placeholders;
 import java.util.List;
 
 /** Assembles a full-screen frame: the map, placeholders for missing tiles, the status bar, and any overlay. */
@@ -13,10 +15,6 @@ final class FrameComposer {
     static final Rgb BAR_BG = new Rgb(0xd0, 0xd0, 0xd0);
     static final Rgb OVERLAY_FG = new Rgb(0xe8, 0xe8, 0xe8);
     static final Rgb OVERLAY_BG = new Rgb(0x28, 0x28, 0x30);
-    private static final Attrs DIM = new Attrs(false, true);
-
-    /** A rectangle of map cells, {@code [col0, col1) × [row0, row1)}. */
-    record Rect(int col0, int row0, int col1, int row1) {}
 
     enum Placement { CENTER, LEFT, RIGHT }
 
@@ -33,7 +31,7 @@ final class FrameComposer {
      * @param overlay a box of lines, or {@link Overlay#NONE}
      * @param cursor the inspect cursor as {@code {col, row}}, or null
      */
-    static Cell[] compose(Canvas map, int cols, int rows, List<Rect> missing, String statusLeft, String statusRight,
+    static Cell[] compose(Canvas map, int cols, int rows, List<CellRect> missing, String statusLeft, String statusRight,
                           Overlay overlay, int[] cursor, Charset charset) {
         Cell[] frame = new Cell[cols * rows];
         boolean unicode = charset.compareTo(Charset.BOX) >= 0;
@@ -44,14 +42,8 @@ final class FrameComposer {
             }
         }
 
-        Cell placeholder = new Cell(unicode ? '░' : '.', null, null, DIM, -1);
-        for (Rect rect : missing) {
-            for (int r = Math.max(0, rect.row0()); r < Math.min(mapRows, rect.row1()); r++) {
-                for (int c = Math.max(0, rect.col0()); c < Math.min(cols, rect.col1()); c++) {
-                    if (frame[r * cols + c].equals(Cell.EMPTY)) frame[r * cols + c] = placeholder;
-                }
-            }
-        }
+        Placeholders.fill(frame, cols, mapRows, missing, charset);
+        Cell placeholder = Placeholders.cell(charset);
 
         if (cursor != null && cursor[0] >= 0 && cursor[0] < cols && cursor[1] >= 0 && cursor[1] < mapRows) {
             Cell under = frame[cursor[1] * cols + cursor[0]];
