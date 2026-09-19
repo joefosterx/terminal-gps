@@ -1,0 +1,30 @@
+# F-Droid build metadata for terminal-gps, ready to submit as
+#   metadata/dev.tilemap.android.yml
+# in a merge request to https://gitlab.com/fdroid/fdroiddata (see https://f-droid.org/docs/Submitting_to_F-Droid_Quick_Start_Guide/).
+# Descriptions, screenshots and changelogs are read from fastlane/metadata/android/ in this repository.
+Categories:
+  - Navigation
+License: MIT
+SourceCode: https://github.com/joefosterx/terminal-gps
+IssueTracker: https://github.com/joefosterx/terminal-gps/issues
+Changelog: https://github.com/joefosterx/terminal-gps/releases
+
+RepoType: git
+Repo: https://github.com/joefosterx/terminal-gps.git
+
+Builds:
+  - versionName: 0.1.0
+    versionCode: 1
+    commit: v0.1.0
+    subdir: android
+    gradle:
+      - yes
+    # settings.gradle includes :android only when an SDK is known; the build server sets ANDROID_HOME, and
+    # -Pandroid makes it explicit. Without a keystore in gradle.properties the release APK is unsigned.
+    gradleprops:
+      - android=true
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9.]+$
+CurrentVersion: 0.1.0
+CurrentVersionCode: 1

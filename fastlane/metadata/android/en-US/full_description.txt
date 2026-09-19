@@ -1,0 +1,12 @@
+Tilemap renders real vector map tiles the way a terminal would: water and parks as braille dots, roads as box-drawing lines whose joints follow the intersections, buildings as blocks, and street names as plain text placed so they never overlap. It is the Android version of the terminal-gps map viewer, and it draws exactly the same map, cell for cell.
+
+Features:
+
+• Pan by dragging, zoom with a pinch or a double tap, long-press to inspect the features under a cell.
+• Five styles: default, dark, mono, VT220 and high contrast; retro 256-, 16- and no-color modes.
+• Show your position and follow it as you move.
+• Works offline from a PMTiles archive or a GeoJSON file picked with the file manager; the file is read in place, never copied.
+• Share the view as plain text, ANSI, HTML or a PNG image.
+• Settings use the same names as the terminal viewer's config.json, and a config file can be imported.
+
+Map data comes from OpenFreeMap by default (© OpenMapTiles © OpenStreetMap contributors); any {z}/{x}/{y} vector tile server or TileJSON URL can be used instead. No account, no analytics, no Play Services.

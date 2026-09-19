@@ -21,9 +21,24 @@ android {
         versionName = '0.1.0'
     }
 
+    // Release signing comes from ~/.gradle/gradle.properties (tilemap.keystore, tilemap.keystorePassword,
+    // tilemap.keyAlias, tilemap.keyPassword). Without them the release APK is left unsigned, which is what
+    // F-Droid wants: it builds from the tag and signs with its own key.
+    if (project.hasProperty('tilemap.keystore')) {
+        signingConfigs {
+            release {
+                storeFile = file(project.property('tilemap.keystore'))
+                storePassword = project.property('tilemap.keystorePassword')
+                keyAlias = project.property('tilemap.keyAlias')
+                keyPassword = project.property('tilemap.keyPassword')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled = false // Jackson reflects over ViewerConfig; keep rules are not worth it yet
+            if (project.hasProperty('tilemap.keystore')) signingConfig = signingConfigs.release
         }
     }
 

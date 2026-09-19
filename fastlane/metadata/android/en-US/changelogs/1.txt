@@ -1,0 +1,1 @@
+First release: pan, zoom and inspect maps drawn as terminal text; five styles; my-location marker with follow mode; offline PMTiles and GeoJSON; share as text, ANSI, HTML or image.

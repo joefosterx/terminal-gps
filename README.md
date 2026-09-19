@@ -249,7 +249,8 @@ Settings use the same field names as the viewer's `config.json`, and a config fi
 GeoJSON files are picked with the system file picker and read in place, so an offline city extract works without
 being copied.
 
-Building it needs an Android SDK. The module is included automatically when `ANDROID_HOME` is set or a
+Ready-built APKs are attached to [GitHub Releases](https://github.com/joefosterx/terminal-gps/releases).
+Building it yourself needs an Android SDK. The module is included automatically when `ANDROID_HOME` is set or a
 `local.properties` with `sdk.dir` exists (or with `-Pandroid`); without one, `./gradlew build` skips it.
 
 ```sh
