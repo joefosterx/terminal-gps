@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keys are the config.json field names, so "Import config.json" is a straight copy. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/pref_source">
+        <EditTextPreference
+            android:key="source"
+            android:title="@string/pref_source"
+            android:summary="@string/pref_source_summary"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:key="pickFile"
+            android:title="@string/pref_pick_file" />
+        <Preference
+            android:key="useDefaultSource"
+            android:title="@string/pref_use_default_source" />
+        <EditTextPreference
+            android:key="key"
+            android:title="@string/pref_key"
+            android:inputType="textPassword" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/style">
+        <ListPreference
+            android:key="style"
+            android:title="@string/pref_style"
+            android:entries="@array/style_entries"
+            android:entryValues="@array/style_entries"
+            android:defaultValue="default"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:key="charset"
+            android:title="@string/pref_charset"
+            android:entries="@array/charset_entries"
+            android:entryValues="@array/charset_entries"
+            android:defaultValue="braille"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:key="color"
+            android:title="@string/pref_color"
+            android:entries="@array/color_entries"
+            android:entryValues="@array/color_values"
+            android:defaultValue="true"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:key="labels"
+            android:title="@string/pref_labels"
+            android:defaultValue="true" />
+        <ListPreference
+            android:key="cellSize"
+            android:title="@string/pref_cell_size"
+            android:entries="@array/cell_size_entries"
+            android:entryValues="@array/cell_size_values"
+            android:defaultValue="medium"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_disk_cache">
+        <EditTextPreference
+            android:key="memoryTiles"
+            android:title="@string/pref_memory_tiles"
+            android:inputType="number"
+            android:defaultValue="256"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:key="diskCache"
+            android:title="@string/pref_disk_cache"
+            android:defaultValue="true" />
+        <SwitchPreferenceCompat
+            android:key="prefetchOnMeteredNetworks"
+            android:title="@string/pref_prefetch_metered"
+            android:summary="@string/pref_prefetch_metered_summary"
+            android:defaultValue="true" />
+        <Preference
+            android:key="clearCache"
+            android:title="@string/pref_clear_cache" />
+        <Preference
+            android:key="importConfig"
+            android:title="@string/pref_import_config" />
+    </PreferenceCategory>
+</PreferenceScreen>

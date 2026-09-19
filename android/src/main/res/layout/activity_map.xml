@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <dev.tilemap.android.TextGridView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/app_name" />
+
+        <TextView
+            android:id="@+id/inspect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="#e0282830"
+            android:textColor="#e8e8e8"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:padding="8dp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#d0d0d0"
+        android:textColor="#101010"
+        android:fontFamily="monospace"
+        android:textSize="11sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#202020">
+
+        <Button android:id="@+id/goTo" style="@style/Widget.AppCompat.Button.Borderless" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/go_to" android:textColor="#e8e8e8" />
+        <Button android:id="@+id/styleButton" style="@style/Widget.AppCompat.Button.Borderless" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/style" android:textColor="#e8e8e8" />
+        <Button android:id="@+id/labelsButton" style="@style/Widget.AppCompat.Button.Borderless" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/labels" android:textColor="#e8e8e8" />
+        <Button android:id="@+id/shareButton" style="@style/Widget.AppCompat.Button.Borderless" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share" android:textColor="#e8e8e8" />
+        <Button android:id="@+id/settingsButton" style="@style/Widget.AppCompat.Button.Borderless" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/settings" android:textColor="#e8e8e8" />
+    </LinearLayout>
+</LinearLayout>

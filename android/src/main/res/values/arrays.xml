@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="style_entries">
+        <item>default</item>
+        <item>dark</item>
+        <item>mono</item>
+        <item>vt220</item>
+        <item>high-contrast</item>
+    </string-array>
+    <string-array name="charset_entries">
+        <item>braille</item>
+        <item>box</item>
+        <item>ascii</item>
+        <item>sextant</item>
+    </string-array>
+    <string-array name="color_entries">
+        <item>true color</item>
+        <item>256 colors</item>
+        <item>16 colors</item>
+        <item>none</item>
+    </string-array>
+    <string-array name="color_values">
+        <item>true</item>
+        <item>256</item>
+        <item>16</item>
+        <item>none</item>
+    </string-array>
+    <string-array name="cell_size_entries">
+        <item>Small</item>
+        <item>Medium</item>
+        <item>Large</item>
+    </string-array>
+    <string-array name="cell_size_values">
+        <item>small</item>
+        <item>medium</item>
+        <item>large</item>
+    </string-array>
+</resources>

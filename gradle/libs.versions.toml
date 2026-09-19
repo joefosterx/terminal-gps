@@ -4,6 +4,14 @@ jackson = "2.18.2"
 protobuf = "4.29.3"
 picocli = "4.7.6"
 jline = "3.30.17"
+# Android (the :android module only)
+agp = "9.4.1"
+androidx-appcompat = "1.8.0"
+androidx-core = "1.19.0"
+androidx-preference = "1.2.1"
+androidx-lifecycle = "2.11.0"
+robolectric = "4.17"
+junit4 = "4.13.2"
 
 [libraries]
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
@@ -12,3 +20,12 @@ protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "p
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 jline-terminal = { module = "org.jline:jline-terminal", version.ref = "jline" }
 jline-terminal-jni = { module = "org.jline:jline-terminal-jni", version.ref = "jline" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
+androidx-preference = { module = "androidx.preference:preference", version.ref = "androidx-preference" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }

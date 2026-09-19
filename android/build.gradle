@@ -1,0 +1,67 @@
+// The Android viewer. Included by settings.gradle only when an SDK is available or -Pandroid is given.
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+android {
+    namespace = 'dev.tilemap.android'
+    compileSdk = 37
+    compileSdkMinor = 2
+
+    defaultConfig {
+        applicationId = 'dev.tilemap.android'
+        minSdk = 26               // java.nio.file, which :lib uses throughout
+        targetSdk = 36
+        versionCode = 1
+        versionName = '0.1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false // Jackson reflects over ViewerConfig; keep rules are not worth it yet
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    packaging {
+        resources.excludes += ['META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/LICENSE*', 'META-INF/NOTICE*']
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+dependencies {
+    implementation project(':viewer-core')
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.core
+    implementation libs.androidx.preference
+    implementation libs.androidx.lifecycle.viewmodel
+
+    testImplementation platform(libs.junit.bom)
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Robolectric drives the view model and the grid view on the JVM; its runner is JUnit 4, hence vintage.
+    testImplementation libs.robolectric
+    testImplementation libs.junit4
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    systemProperty 'tilemap.fixtures', rootProject.file('fixtures').absolutePath
+}

@@ -32,3 +32,6 @@ build/
 .idea/
 .vscode/
 *.iml
+
+# Android SDK location (machine-specific)
+local.properties

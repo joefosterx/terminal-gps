@@ -231,6 +231,31 @@ Downloaded tiles are kept in memory and on disk, and the disk cache respects the
 The default disk location is `$XDG_CACHE_HOME/tilemap`, `%LOCALAPPDATA%\tilemap\cache` on Windows, or
 `~/.cache/tilemap` otherwise. Turn it off with `--no-disk-cache` or `"diskCache": false`.
 
+## Android app
+
+The same viewer runs on Android as the `:android` module: the same renderer, the same tile sources, drawn into a
+grid view that paints braille, box-drawing and block glyphs as shapes so every phone shows the same map.
+
+| Gesture | Action |
+| --- | --- |
+| Drag / fling | Pan |
+| Pinch | Zoom, fractional, around the fingers |
+| Double tap / two-finger tap | Zoom in / out by 1 |
+| Long press | Inspect the features under that cell (tap the panel or press Back to close) |
+| Bottom bar | Go to `lon,lat[,zoom]`, cycle style, toggle labels, share (text, ANSI, HTML, PNG), settings |
+
+Settings use the same field names as the viewer's `config.json`, and a config file can be imported. PMTiles and
+GeoJSON files are picked with the system file picker and read in place, so an offline city extract works without
+being copied.
+
+Building it needs an Android SDK. The module is included automatically when `ANDROID_HOME` is set or a
+`local.properties` with `sdk.dir` exists (or with `-Pandroid`); without one, `./gradlew build` skips it.
+
+```sh
+./gradlew :android:assembleDebug        # android/build/outputs/apk/debug/android-debug.apk
+./gradlew :android:testDebugUnitTest    # JVM tests, including a Robolectric render of the fixture town
+```
+
 ## Tile sources
 
 Both tools accept the same sources through `--source`, the `source` config field, or the `TILEMAP_SOURCE`

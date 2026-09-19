@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tilemap</string>
+    <string name="settings">Settings</string>
+    <string name="go_to">Go to</string>
+    <string name="style">Style</string>
+    <string name="labels">Labels</string>
+    <string name="share">Share</string>
+    <string name="go_to_hint">lon,lat[,zoom]</string>
+    <string name="go_to_error">Expected lon,lat[,zoom]</string>
+    <string name="share_text">Text</string>
+    <string name="share_html">HTML</string>
+    <string name="share_image">Image</string>
+    <string name="copy_text">Copy as text</string>
+    <string name="copy_ansi">Copy as ANSI</string>
+    <string name="copied">Copied</string>
+    <string name="first_run_tip">Drag to pan, pinch to zoom, double-tap to zoom in, long-press to inspect.</string>
+    <string name="attribution_openfreemap">© OpenMapTiles © OpenStreetMap contributors</string>
+    <string name="inspect_close">Tap here to close</string>
+
+    <string name="pref_source">Tile source</string>
+    <string name="pref_source_summary">URL template, TileJSON URL, or a picked .pmtiles/.geojson file</string>
+    <string name="pref_pick_file">Pick a PMTiles or GeoJSON file…</string>
+    <string name="pref_use_default_source">Use OpenFreeMap</string>
+    <string name="pref_key">API key</string>
+    <string name="pref_style">Style</string>
+    <string name="pref_charset">Character set</string>
+    <string name="pref_color">Retro colors</string>
+    <string name="pref_labels">Labels</string>
+    <string name="pref_cell_size">Cell size</string>
+    <string name="pref_memory_tiles">Tiles kept in memory</string>
+    <string name="pref_disk_cache">Disk cache</string>
+    <string name="pref_prefetch_metered">Prefetch on mobile data</string>
+    <string name="pref_prefetch_metered_summary">Off pauses tiles beyond the visible ones on metered networks</string>
+    <string name="pref_import_config">Import config.json</string>
+    <string name="pref_clear_cache">Clear tile cache</string>
+    <string name="cache_cleared">Tile cache cleared</string>
+    <string name="config_imported">Config imported</string>
+    <string name="config_import_failed">Could not import: %1$s</string>
+</resources>
