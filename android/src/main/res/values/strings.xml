@@ -17,6 +17,9 @@
     <string name="first_run_tip">Drag to pan, pinch to zoom, double-tap to zoom in, long-press to inspect.</string>
     <string name="attribution_openfreemap">© OpenMapTiles © OpenStreetMap contributors</string>
     <string name="inspect_close">Tap here to close</string>
+    <string name="my_location">My location</string>
+    <string name="location_denied">Location permission is needed to show where you are</string>
+    <string name="location_waiting">Waiting for a position…</string>
 
     <string name="pref_source">Tile source</string>
     <string name="pref_source_summary">URL template, TileJSON URL, or a picked .pmtiles/.geojson file</string>

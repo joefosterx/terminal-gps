@@ -94,8 +94,25 @@ public class GridRenderTest {
         assertNotNull(bitmap);
         assertEquals(Math.round(80 * 8 * app.getResources().getDisplayMetrics().density), bitmap.getWidth());
 
+        // My location: the marker appears where the fix is, and following recenters the view on it.
+        model.toggleLocation();
+        model.setLocation(new LonLat(10.001, 50.001));
+        deadline = System.nanoTime() + 20_000_000_000L;
+        MapViewModel.Frame located = null;
+        while (System.nanoTime() < deadline) {
+            shadowOf(Looper.getMainLooper()).idle();
+            located = last.get();
+            if (located != null && located.cells()[15 * 80 + 40].codePoint() == dev.tilemap.viewer.PositionOverlay.MARKER) break;
+            Thread.sleep(50);
+        }
+        assertNotNull(located);
+        assertEquals(dev.tilemap.viewer.PositionOverlay.MARKER, located.cells()[15 * 80 + 40].codePoint());
+        assertTrue(located.status(), located.status().contains("following"));
+        assertTrue(model.gestures().drag(1, 0));
+        model.stopLocating();
+
         model.pause();
-        assertEquals("10.000000,50.000000,15.000", prefs.getString(AppPrefs.KEY_LAST_VIEW, null));
+        assertTrue(prefs.getString(AppPrefs.KEY_LAST_VIEW, ""), prefs.getString(AppPrefs.KEY_LAST_VIEW, "").endsWith(",15.000"));
     }
 
     @Test

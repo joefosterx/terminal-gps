@@ -242,6 +242,7 @@ grid view that paints braille, box-drawing and block glyphs as shapes so every p
 | Pinch | Zoom, fractional, around the fingers |
 | Double tap / two-finger tap | Zoom in / out by 1 |
 | Long press | Inspect the features under that cell (tap the panel or press Back to close) |
+| ◎ button | Show your position as a marker and follow it; press again to stop following, long-press to turn it off |
 | Bottom bar | Go to `lon,lat[,zoom]`, cycle style, toggle labels, share (text, ANSI, HTML, PNG), settings |
 
 Settings use the same field names as the viewer's `config.json`, and a config file can be imported. PMTiles and

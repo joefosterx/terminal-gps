@@ -24,6 +24,7 @@ import dev.tilemap.viewer.AppState;
 import dev.tilemap.viewer.CellRect;
 import dev.tilemap.viewer.InspectPanel;
 import dev.tilemap.viewer.Placeholders;
+import dev.tilemap.viewer.PositionOverlay;
 import dev.tilemap.viewer.TileCache;
 import dev.tilemap.viewer.TilePlan;
 import java.io.IOException;
@@ -64,7 +65,14 @@ public final class MapViewModel extends AndroidViewModel {
     private final SharedPreferences prefs;
     private AppPrefs settings;
     private TileCache cache;
+    private PositionOverlay overlay;
     private DeferredSource upstream;
+    /** The user asked for their position; the marker shows once a fix arrives. */
+    private volatile boolean locating;
+    /** Keep the view centered on the position until the user pans. */
+    private volatile boolean following;
+    private Style markedBase;
+    private Style marked;
     private volatile String attribution = "";
     private volatile int cols;
     private volatile int rows;
@@ -119,6 +127,7 @@ public final class MapViewModel extends AndroidViewModel {
         return new GridGestures() {
             @Override
             public boolean drag(double dCols, double dRows) {
+                following = false;
                 synchronized (state) {
                     return apply(touch.drag(dCols, dRows));
                 }
@@ -201,6 +210,48 @@ public final class MapViewModel extends AndroidViewModel {
         }
     }
 
+    boolean locating() {
+        return locating;
+    }
+
+    /**
+     * The my-location button: the first press turns the marker on and follows the position; while following,
+     * a press stops following; when not following, a press recenters and follows again.
+     */
+    void toggleLocation() {
+        if (!locating) {
+            locating = true;
+            following = true;
+            if (overlay.position() == null) messages.setValue(getApplication().getString(R.string.location_waiting));
+        } else {
+            following = !following;
+        }
+        LonLat at = overlay.position();
+        if (following && at != null) center(at);
+        markDirty();
+    }
+
+    void stopLocating() {
+        locating = false;
+        following = false;
+        overlay.setPosition(null);
+        markDirty();
+    }
+
+    /** A fix from {@link LocationTracker}; any thread. */
+    void setLocation(LonLat at) {
+        if (!locating) return;
+        overlay.setPosition(at);
+        if (following) center(at);
+        markDirty();
+    }
+
+    private void center(LonLat at) {
+        synchronized (state) {
+            state.goTo(at, state.zoom < 14 ? 15.0 : null);
+        }
+    }
+
     void cycleStyle() {
         String next;
         synchronized (state) {
@@ -276,6 +327,18 @@ public final class MapViewModel extends AndroidViewModel {
         attribution = SourceOpener.attribution(app, s);
         upstream = new DeferredSource(() -> SourceOpener.open(app, s, new UrlConnectionFetcher()));
         cache = new TileCache(upstream, s.memoryTiles(), fetchers, id -> markDirty(), System::nanoTime);
+        PositionOverlay previous = overlay;
+        overlay = new PositionOverlay(cache);
+        if (previous != null) overlay.setPosition(previous.position());
+    }
+
+    /** The style with the marker rule appended, rebuilt only when the style changes. */
+    private Style marked(Style base) {
+        if (base != markedBase) {
+            markedBase = base;
+            marked = PositionOverlay.style(base);
+        }
+        return marked;
     }
 
     private static void close(AutoCloseable c) {
@@ -308,6 +371,7 @@ public final class MapViewModel extends AndroidViewModel {
     private void frame() {
         int cols = this.cols, rows = this.rows;
         TileCache cache = this.cache;
+        PositionOverlay overlay = this.overlay;
         if (cols < 1 || rows < 1 || cache == null) return;
         Viewport vp;
         Style style;
@@ -335,7 +399,7 @@ public final class MapViewModel extends AndroidViewModel {
         long start = System.nanoTime();
         Canvas map;
         try {
-            map = Renderer.render(vp, style, caps, cache, labels);
+            map = Renderer.render(vp, locating ? marked(style) : style, caps, locating ? overlay : cache, labels);
         } catch (RenderException e) {
             throw new IllegalStateException("the tile cache never fails", e);
         }
@@ -355,7 +419,7 @@ public final class MapViewModel extends AndroidViewModel {
         List<String> panel = null;
         if (inspect) {
             synchronized (state) {
-                panel = InspectPanel.lines(state, cache, vp, cols, rows, "", 12, Math.max(20, cols - 2));
+                panel = InspectPanel.lines(state, locating ? overlay : cache, vp, cols, rows, "", 12, Math.max(20, cols - 2));
             }
         }
         String status = status(vp, cache, loaded, visible.size(), message, styleName);
@@ -395,6 +459,7 @@ public final class MapViewModel extends AndroidViewModel {
             pausedLabels = state.labelsPausedForSpeed;
         }
         if (pausedLabels) sb.append("  labels paused (slow)");
+        if (following) sb.append("  \u25ce following");
         int failed = cache.failed();
         if (failed > 0) sb.append("  ").append(failed).append(" failed: ").append(cache.lastError());
         sb.append(String.format(Locale.ROOT, "  tiles %d/%d  queue %d  %d ms  %s", loaded, visible, cache.pending(),

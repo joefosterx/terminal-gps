@@ -15,6 +15,19 @@
             android:layout_height="match_parent"
             android:contentDescription="@string/app_name" />
 
+        <Button
+            android:id="@+id/locate"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="#80202020"
+            android:text="◎"
+            android:textSize="22sp"
+            android:textColor="#e8e8e8"
+            android:contentDescription="@string/my_location" />
+
         <TextView
             android:id="@+id/inspect"
             android:layout_width="match_parent"

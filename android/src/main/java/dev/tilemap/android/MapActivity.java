@@ -1,5 +1,6 @@
 package dev.tilemap.android;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -8,6 +9,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -19,6 +22,16 @@ public final class MapActivity extends AppCompatActivity {
     private TextGridView map;
     private TextView status;
     private TextView inspect;
+    private LocationTracker tracker;
+    private final ActivityResultLauncher<String> askLocation = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) {
+                    model.toggleLocation();
+                    tracker.start();
+                } else {
+                    Toast.makeText(this, R.string.location_denied, Toast.LENGTH_LONG).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +64,22 @@ public final class MapActivity extends AppCompatActivity {
         findViewById(R.id.shareButton).setOnClickListener(v -> ShareSheet.show(this, model, map));
         findViewById(R.id.settingsButton).setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
 
+        tracker = new LocationTracker(this, model::setLocation);
+        findViewById(R.id.locate).setOnClickListener(v -> {
+            if (LocationTracker.hasPermission(this)) {
+                model.toggleLocation();
+                tracker.start();
+            } else {
+                askLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+        });
+        // A long press turns the marker off again.
+        findViewById(R.id.locate).setOnLongClickListener(v -> {
+            model.stopLocating();
+            tracker.stop();
+            return true;
+        });
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -74,10 +103,12 @@ public final class MapActivity extends AppCompatActivity {
         super.onStart();
         model.applyPrefs();
         model.resume();
+        if (model.locating() && LocationTracker.hasPermission(this)) tracker.start();
     }
 
     @Override
     protected void onStop() {
+        tracker.stop();
         model.pause();
         super.onStop();
     }
