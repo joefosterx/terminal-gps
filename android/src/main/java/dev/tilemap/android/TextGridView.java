@@ -15,6 +15,7 @@ import dev.tilemap.core.Attrs;
 import dev.tilemap.core.Capabilities.ColorDepth;
 import dev.tilemap.core.Cell;
 import dev.tilemap.core.Rgb;
+import java.util.function.Consumer;
 
 /**
  * A grid of equal cells painted from a {@link MapViewModel.Frame}. The view chooses the cell size and reports how
@@ -38,6 +39,8 @@ public final class TextGridView extends View {
     private final OverScroller scroller;
     private GridGestures handler;
     private SizeListener sizeListener;
+    private Consumer<Boolean> interaction;
+    private boolean interacting;
     private MapViewModel.Frame frame;
     private float cellW;
     private float cellH;
@@ -112,6 +115,17 @@ public final class TextGridView extends View {
 
     void setGestures(GridGestures handler) {
         this.handler = handler;
+    }
+
+    /** Told true while a finger is down or a fling runs, false when the map settles; the model skips labels meanwhile. */
+    void setInteractionListener(Consumer<Boolean> listener) {
+        interaction = listener;
+    }
+
+    private void interacting(boolean now) {
+        if (now == interacting) return;
+        interacting = now;
+        if (interaction != null) interaction.accept(now);
     }
 
     void setSizeListener(SizeListener listener) {
@@ -226,7 +240,10 @@ public final class TextGridView extends View {
     }
 
     private void flingStep() {
-        if (!scroller.computeScrollOffset()) return;
+        if (!scroller.computeScrollOffset()) {
+            interacting(false);
+            return;
+        }
         int x = scroller.getCurrX(), y = scroller.getCurrY();
         if (handler != null && handler.drag((x - flingX) / cellW, (y - flingY) / cellH)) invalidate();
         flingX = x;
@@ -237,6 +254,7 @@ public final class TextGridView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN -> interacting(true);
             case MotionEvent.ACTION_POINTER_DOWN -> {
                 if (event.getPointerCount() == 2) {
                     secondFingerDown = event.getEventTime();
@@ -259,6 +277,11 @@ public final class TextGridView extends View {
         }
         scaler.onTouchEvent(event);
         gestures.onTouchEvent(event);
+        // After the detectors, so a fling started by this event keeps the interaction open until it stops.
+        if ((event.getActionMasked() == MotionEvent.ACTION_UP || event.getActionMasked() == MotionEvent.ACTION_CANCEL)
+                && scroller.isFinished()) {
+            interacting(false);
+        }
         return true;
     }
 

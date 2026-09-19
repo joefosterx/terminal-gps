@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
+import android.util.Log;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -45,7 +46,8 @@ public final class MapViewModel extends AndroidViewModel {
     public record Frame(Cell[] cells, int cols, int rows, ColorDepth depth, boolean darkBackground, String status,
                         List<String> inspect, int cursorCol, int cursorRow) {}
 
-    static final long FRAME_BUDGET_NANOS = 16_000_000L;
+    /** Looser than the terminal's 16 ms: a phone JIT starts cold, and drags coalesce to one render per render anyway. */
+    static final long FRAME_BUDGET_NANOS = 40_000_000L;
     static final int SLOW_FRAMES_BEFORE_DEGRADING = 3;
     private static final int FETCH_THREADS = 8;
 
@@ -77,6 +79,8 @@ public final class MapViewModel extends AndroidViewModel {
     private volatile int cols;
     private volatile int rows;
     private volatile boolean paused = true;
+    /** A finger is down or a fling is running: frames skip the label pass and the settle frame brings it back. */
+    private volatile boolean interacting;
     private volatile Canvas lastCanvas;
     private long lastRenderNanos;
     private int slowFrames;
@@ -304,6 +308,17 @@ public final class MapViewModel extends AndroidViewModel {
         markDirty();
     }
 
+    void setInteracting(boolean now) {
+        interacting = now;
+        if (!now) {
+            synchronized (state) {
+                state.labelsPausedForSpeed = false;
+            }
+            slowFrames = 0;
+        }
+        markDirty();
+    }
+
     void resume() {
         paused = false;
         markDirty();
@@ -383,7 +398,7 @@ public final class MapViewModel extends AndroidViewModel {
             vp = state.viewport(cols, rows);
             style = state.style;
             caps = state.caps;
-            labels = state.labelsOn();
+            labels = state.labelsOn() && !interacting;
             inspect = state.inspect;
             styleName = state.styleName;
             message = state.message;
@@ -405,6 +420,7 @@ public final class MapViewModel extends AndroidViewModel {
         }
         lastRenderNanos = System.nanoTime() - start;
         lastCanvas = map;
+        Log.d("tilemap", "render " + cols + "x" + rows + " z" + String.format(Locale.ROOT, "%.2f", vp.zoom()) + " in " + lastRenderNanos / 1_000_000 + " ms, labels " + labels);
         budget();
 
         List<CellRect> missing = new ArrayList<>();
@@ -462,8 +478,8 @@ public final class MapViewModel extends AndroidViewModel {
         if (following) sb.append("  \u25ce following");
         int failed = cache.failed();
         if (failed > 0) sb.append("  ").append(failed).append(" failed: ").append(cache.lastError());
-        sb.append(String.format(Locale.ROOT, "  tiles %d/%d  queue %d  %d ms  %s", loaded, visible, cache.pending(),
-                lastRenderNanos / 1_000_000, styleName));
+        sb.append(String.format(Locale.ROOT, "  tiles %d/%d  queue %d  %d ms", loaded, visible, cache.pending(), lastRenderNanos / 1_000_000));
+        sb.append('\n').append(styleName);
         if (!attribution.isEmpty()) sb.append("  ").append(attribution);
         return sb.toString();
     }

@@ -13,6 +13,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
@@ -37,6 +40,12 @@ public final class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        // Edge-to-edge: keep the grid and the bars out from under the status bar and the navigation handle.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root), (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
         model = new ViewModelProvider(this).get(MapViewModel.class);
         map = findViewById(R.id.map);
         status = findViewById(R.id.status);
@@ -44,6 +53,7 @@ public final class MapActivity extends AppCompatActivity {
 
         map.setGestures(model.gestures());
         map.setSizeListener(model::setSize);
+        map.setInteractionListener(model::setInteracting);
         model.cellWidthDp().observe(this, map::setCellWidthDp);
         model.frames().observe(this, frame -> {
             map.setFrame(frame);
