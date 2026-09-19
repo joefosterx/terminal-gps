@@ -356,3 +356,8 @@ depths and style presets, and the output is compared byte for byte to the files 
 your change.
 
 The design and roadmap are in [docs/Terminal Map Renderer — Design.md](docs/Terminal%20Map%20Renderer%20—%20Design.md).
+
+## License
+
+[MIT](LICENSE). Map data from OpenFreeMap is © OpenMapTiles © OpenStreetMap contributors and carries its own
+terms; see [Tile sources](#tile-sources).
